@@ -458,7 +458,7 @@ struct Matrix4_ : Moveable<Matrix4_<T>> {
     static Matrix4_    Perspective(T fov, T aspectratio, T fnear, T ffar);
     static Matrix4_    Frustum(const Rect_<T>& view, T fnear, T ffar);
     static Matrix4_    Orthographic(const Rect_<T>& view, T fnear, T ffar);
-    static Matrix4_    Isometric(T zoom, T aspectRatio, T fnear, T ffar);
+    static Matrix4_    Isometric(T zoom, T aspectratio, T fnear, T ffar);
     static Matrix4_    LookAt(const Point3_<T>& eye, const Point3_<T>& center, const Point3_<T>& up);
 
     T                  Determinant() const;

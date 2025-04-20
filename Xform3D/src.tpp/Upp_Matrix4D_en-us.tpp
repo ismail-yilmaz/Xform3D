@@ -154,7 +154,7 @@ Matrix4`_<T> [* Orthographic]([@(0.0.255) const] Rect`_<T>[@(0.0.255) `&]
 [s3; &]
 [s4; &]
 [s5;:Upp`:`:Matrix4`_`:`:Isometric`(T`,T`,T`,T`): [@(0.0.255) static] 
-Matrix4`_<T> [* Isometric](T [*@3 zoom], T [*@3 aspectRatio], T [*@3 fnear], 
+Matrix4`_<T> [* Isometric](T [*@3 zoom], T [*@3 aspectratio], T [*@3 fnear], 
 T [*@3 ffar])&]
 [s2;%% Generates an isometric projection matrix by combining an orthographic 
 projection with rotations around the X and Y axes. Returns the 
