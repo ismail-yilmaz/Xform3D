@@ -19,5 +19,5 @@
 
 ## Screenshot
 
-[Teapot3D](examples/Teapot3D/teapot.png)
+![Teapot3D](examples/Teapot3D/teapot.png)
 
