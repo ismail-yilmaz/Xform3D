@@ -458,6 +458,7 @@ struct Matrix4_ : Moveable<Matrix4_<T>> {
     static Matrix4_    Perspective(T fov, T aspectratio, T fnear, T ffar);
     static Matrix4_    Frustum(const Rect_<T>& view, T fnear, T ffar);
     static Matrix4_    Orthographic(const Rect_<T>& view, T fnear, T ffar);
+    static Matrix4_    Isometric(T zoom, T aspectRatio, T fnear, T ffar);
     static Matrix4_    LookAt(const Point3_<T>& eye, const Point3_<T>& center, const Point3_<T>& up);
 
     T                  Determinant() const;
@@ -671,9 +672,9 @@ Matrix4_<T> Matrix4_<T>::Perspective(T fov, T aspectratio, T fnear, T ffar)
     Matrix4_<T> m = Zero();
     m.x.x = f / aspectratio;
     m.y.y = f;
-    m.z.z = -(ffar + fnear) / depth;
-    m.z.w = -1.0;
-    m.w.z = -(2.0 * fnear * ffar) / depth;
+    m.z.z = ffar / depth;
+    m.z.w = 1.0;
+    m.w.z = -fnear * ffar / depth;
 
     return m;
 }
@@ -694,9 +695,9 @@ Matrix4_<T> Matrix4_<T>::Frustum(const Rect_<T>& view, T fnear, T ffar)
     m.y.y = (2.0 * fnear) / h;
     m.z.x = (view.left + view.right) / w;
     m.z.y = (view.top + view.bottom) / h;
-    m.z.z = -(ffar + fnear) / clip;
-    m.z.w = -1.0;
-    m.w.z = -(2.0 * fnear * ffar) / clip;
+    m.z.z = ffar / clip;
+    m.z.w = 1.0;
+    m.w.z = -fnear * ffar / clip;
 
     return m;
 }
@@ -717,39 +718,50 @@ Matrix4_<T> Matrix4_<T>::Orthographic(const Rect_<T>& view, T fnear, T ffar)
     m.w.x = -(view.left + view.right) / w;
     m.y.y = 2.0 / h;
     m.w.y = -(view.top + view.bottom) / h;
-    m.z.z = -2.0 / clip;
+    m.z.z = 2.0 / clip;
     m.w.z = -(ffar + fnear) / clip;
 
     return m;
+}
+
+template <class T>
+Matrix4_<T> Matrix4_<T>::Isometric(T zoom, T aspectratio, T fnear, T ffar)
+{
+    T hcx = zoom;
+    T hcy = zoom / aspectratio;
+
+    Matrix4_ m = Orthographic(Rect_<T>(-hcx, -hcy, hcx, hcy), fnear, ffar);
+    
+    return !m.IsNullInstance()
+          ? m * RotationY(-45.0f  *  M_PI / 180.0) * RotationX(35.264f *  M_PI / 180.0) : Null;
 }
 
 template<typename T>
 Matrix4_<T> Matrix4_<T>::LookAt(const Point3_<T>& eye, const Point3_<T>& center, const Point3_<T>& up)
 {
     Point3_<T> fwd    = (center - eye).Normalized();
-    Point3_<T> right  = CrossProduct(fwd, up).Normalized();
-    Point3_<T> new_up = CrossProduct(right, fwd);
+    Point3_<T> right  = CrossProduct(up, fwd).Normalized();
+    Point3_<T> new_up = CrossProduct(fwd, right);
 
     Matrix4_<T> m = Identity();
 
-    // Assign basis vectors (TRANSPOSED for row-major)
     m.x.x = right.x;
     m.x.y = right.y;
     m.x.z = right.z;
     m.y.x = new_up.x;
     m.y.y = new_up.y;
     m.y.z = new_up.z;
-    m.z.x = -fwd.x;
-    m.z.y = -fwd.y;
-    m.z.z = -fwd.z;
+    m.z.x = fwd.x;
+    m.z.y = fwd.y;
+    m.z.z = fwd.z;
 
-    // Translation
     m.w.x = -DotProduct(right, eye);
     m.w.y = -DotProduct(new_up, eye);
-    m.w.z = DotProduct(fwd, eye);
+    m.w.z = -DotProduct(fwd, eye);
 
     return m;
 }
+
 
 template<typename T>
 T Matrix4_<T>::Determinant() const
