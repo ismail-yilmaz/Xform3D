@@ -1,0 +1,16 @@
+description "Example code rendering the famous Utah teapot, using Xform3D and Painter.\377";
+
+uses
+	CtrlLib,
+	Xform3D;
+
+file
+	Teapot3D.h,
+	main.cpp,
+	Teapot3D.lay,
+	Resources readonly separator,
+	teapot.obj;
+
+mainconfig
+	"" = "GUI";
+

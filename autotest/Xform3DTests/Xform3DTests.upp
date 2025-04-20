@@ -1,0 +1,12 @@
+description "Unit tests for Xform3D pacakge\377";
+
+uses
+	Core,
+	Xform3D;
+
+file
+	Xform3DTests.cpp;
+
+mainconfig
+	"" = "";
+

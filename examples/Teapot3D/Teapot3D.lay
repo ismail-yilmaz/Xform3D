@@ -1,0 +1,26 @@
+LAYOUT(PanelLayout, 261, 412)
+	ITEM(Upp::SliderCtrl, fov, HSizePosZ(64, 8).TopPosZ(12, 24))
+	ITEM(Upp::SliderCtrl, rx, HSizePosZ(64, 8).TopPosZ(40, 24))
+	ITEM(Upp::SliderCtrl, ry, HSizePosZ(64, 8).TopPosZ(68, 24))
+	ITEM(Upp::SliderCtrl, rz, HSizePosZ(64, 8).TopPosZ(96, 24))
+	ITEM(Upp::SliderCtrl, sx, HSizePosZ(64, 8).TopPosZ(124, 24))
+	ITEM(Upp::SliderCtrl, sy, HSizePosZ(64, 8).TopPosZ(152, 24))
+	ITEM(Upp::SliderCtrl, sz, HSizePosZ(63, 9).TopPosZ(181, 24))
+	ITEM(Upp::SliderCtrl, tx, HSizePosZ(63, 9).TopPosZ(211, 24))
+	ITEM(Upp::SliderCtrl, ty, HSizePosZ(63, 9).TopPosZ(239, 24))
+	ITEM(Upp::SliderCtrl, tz, HSizePosZ(63, 9).TopPosZ(267, 24))
+	ITEM(Upp::Label, dv___10, SetLabel(t_("FoV")).LeftPosZ(10, 50).TopPosZ(12, 24))
+	ITEM(Upp::Label, dv___11, SetLabel(t_("Rotate Y")).LeftPosZ(10, 50).TopPosZ(68, 24))
+	ITEM(Upp::Label, dv___12, SetLabel(t_("Rotate X")).LeftPosZ(10, 50).TopPosZ(40, 24))
+	ITEM(Upp::Label, dv___13, SetLabel(t_("Rotate Z")).LeftPosZ(10, 50).TopPosZ(96, 24))
+	ITEM(Upp::Label, dv___14, SetLabel(t_("Scale X")).LeftPosZ(10, 50).TopPosZ(124, 24))
+	ITEM(Upp::Label, dv___15, SetLabel(t_("Scale Y")).LeftPosZ(10, 50).TopPosZ(152, 24))
+	ITEM(Upp::Label, dv___16, SetLabel(t_("Scale Z")).LeftPosZ(9, 50).TopPosZ(181, 24))
+	ITEM(Upp::Label, dv___17, SetLabel(t_("Move X")).LeftPosZ(10, 50).TopPosZ(211, 24))
+	ITEM(Upp::Label, dv___18, SetLabel(t_("Move Y")).LeftPosZ(10, 50).TopPosZ(239, 24))
+	ITEM(Upp::Label, dv___19, SetLabel(t_("Move Z")).LeftPosZ(10, 50).TopPosZ(267, 24))
+END_LAYOUT
+
+LAYOUT(TeapotViewerLayout, 400, 288)
+END_LAYOUT
+
