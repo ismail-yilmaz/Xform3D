@@ -45,9 +45,10 @@ TeapotViewer::TeapotViewer()
 	
 	CtrlLayout(*this, t_("Teapot Viewer"));
 	CtrlLayout(panel);
+	panel.Color(SColorFace);
 
 	Sizeable().Zoomable().CenterScreen().SetRect(0, 0, 800, 800);
-	AddFrame(sf.Right(panel, 200));
+	AddFrame(sf.Right(panel , 200).MinSize(200));
 
 	auto refresh = [=] { Refresh(); };
 

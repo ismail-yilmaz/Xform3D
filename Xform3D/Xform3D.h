@@ -457,7 +457,7 @@ struct Matrix4_ : Moveable<Matrix4_<T>> {
     static Matrix4_    Rotation(T ax, T ay, T az, T angle);
     static Matrix4_    Perspective(T fov, T aspectratio, T fnear, T ffar);
     static Matrix4_    Frustum(const Rect_<T>& view, T fnear, T ffar);
-    static Matrix4_    Ortographic(const Rect_<T>& view, T fnear, T ffar);
+    static Matrix4_    Orthographic(const Rect_<T>& view, T fnear, T ffar);
     static Matrix4_    LookAt(const Point3_<T>& eye, const Point3_<T>& center, const Point3_<T>& up);
 
     T                  Determinant() const;
@@ -702,7 +702,7 @@ Matrix4_<T> Matrix4_<T>::Frustum(const Rect_<T>& view, T fnear, T ffar)
 }
 
 template<typename T>
-Matrix4_<T> Matrix4_<T>::Ortographic(const Rect_<T>& view, T fnear, T ffar)
+Matrix4_<T> Matrix4_<T>::Orthographic(const Rect_<T>& view, T fnear, T ffar)
 {
     if(view.IsEmpty() || fnear == ffar)
         return Null;
