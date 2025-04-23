@@ -153,6 +153,8 @@ Matrix4`_<T> [* Orthographic]([@(0.0.255) const] Rect`_<T>[@(0.0.255) `&]
 [s2;%% Returns an ortographic projection matrix.&]
 [s3; &]
 [s4; &]
+[s5;:Upp`:`:Matrix4`_`:`:Isometric`(Rect`_`,T`,T`): [@(0.0.255) static] 
+Matrix4`_<T> [* Isometric](Rect`_<T> [*@3 r], T [*@3 fnear], T [*@3 ffar])&]
 [s5;:Upp`:`:Matrix4`_`:`:Isometric`(T`,T`,T`,T`): [@(0.0.255) static] 
 Matrix4`_<T> [* Isometric](T [*@3 zoom], T [*@3 aspectratio], T [*@3 fnear], 
 T [*@3 ffar])&]

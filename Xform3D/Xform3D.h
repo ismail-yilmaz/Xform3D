@@ -458,6 +458,7 @@ struct Matrix4_ : Moveable<Matrix4_<T>> {
     static Matrix4_    Perspective(T fov, T aspectratio, T fnear, T ffar);
     static Matrix4_    Frustum(const Rect_<T>& view, T fnear, T ffar);
     static Matrix4_    Orthographic(const Rect_<T>& view, T fnear, T ffar);
+    static Matrix4_    Isometric(Rect_<T> r, T fnear, T ffar);
     static Matrix4_    Isometric(T zoom, T aspectratio, T fnear, T ffar);
     static Matrix4_    LookAt(const Point3_<T>& eye, const Point3_<T>& center, const Point3_<T>& up);
 
@@ -724,16 +725,21 @@ Matrix4_<T> Matrix4_<T>::Orthographic(const Rect_<T>& view, T fnear, T ffar)
     return m;
 }
 
-template <class T>
+template<typename T>
+Matrix4_<T> Matrix4_<T>::Isometric(Rect_<T> r, T fnear, T ffar)
+{
+    Matrix4_ m = Orthographic(r, fnear, ffar);
+    return !m.IsNullInstance()
+          ? m * RotationY(-T(45.0)  *  T(M_PI / 180.0)) * RotationX(T(35.264) *  T(M_PI / 180.0)) : Null;
+}
+
+template <typename T>
 Matrix4_<T> Matrix4_<T>::Isometric(T zoom, T aspectratio, T fnear, T ffar)
 {
     T hcx = zoom;
     T hcy = zoom / aspectratio;
 
-    Matrix4_ m = Orthographic(Rect_<T>(-hcx, -hcy, hcx, hcy), fnear, ffar);
-    
-    return !m.IsNullInstance()
-          ? m * RotationY(-45.0f  *  M_PI / 180.0) * RotationX(35.264f *  M_PI / 180.0) : Null;
+    return Isometric(Rect_<T>(-hcx, -hcy, hcx, hcy), fnear, ffar);
 }
 
 template<typename T>
@@ -761,7 +767,6 @@ Matrix4_<T> Matrix4_<T>::LookAt(const Point3_<T>& eye, const Point3_<T>& center,
 
     return m;
 }
-
 
 template<typename T>
 T Matrix4_<T>::Determinant() const
