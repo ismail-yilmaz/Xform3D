@@ -730,7 +730,7 @@ Matrix4_<T> Matrix4_<T>::Isometric(Rect_<T> r, T fnear, T ffar)
 {
     Matrix4_ m = Orthographic(r, fnear, ffar);
     return !m.IsNullInstance()
-          ? m * RotationY(-T(45.0)  *  T(M_PI / 180.0)) * RotationX(T(35.264) *  T(M_PI / 180.0)) : Null;
+          ? m * (RotationY(-T(45.0)  *  T(M_PI / 180.0)) * RotationX(T(35.264) *  T(M_PI / 180.0))) : Null;
 }
 
 template <typename T>
