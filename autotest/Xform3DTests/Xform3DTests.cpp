@@ -5,7 +5,7 @@ using namespace Upp;
 // Helper function
 template<typename T>
 bool IsEpsqual(T a, T b, T epsilon = std::numeric_limits<T>::epsilon()) {
-    return abs(a - b) <= epsilon * (1 + abs(a) + abs(b));
+	return abs(a - b) <= epsilon * (1 + abs(a) + abs(b));
 }
 
 void TestPoint3D()
@@ -33,24 +33,24 @@ void TestPoint3D()
 	ASSERT(p2 / 2 == p1);
 
 	// Basic math
-    ASSERT(p2 - p1 == p1);
-    ASSERT(-p1 + p1 == Point3D(0, 0, 0));
+	ASSERT(p2 - p1 == p1);
+	ASSERT(-p1 + p1 == Point3D(0, 0, 0));
 
-   // Scalar operations
-    ASSERT(p1 * 2 == p2);
-    ASSERT(p2 / 2 == p1);
+	// Scalar operations
+	ASSERT(p1 * 2 == p2);
+	ASSERT(p2 / 2 == p1);
 
-    // ToPointfAffine
-    ASSERT(Point3D(10, 20, 10).ToPointfAffine() == Pointf(1, 2));
+	// ToPointfAffine
+	ASSERT(Point3D(10, 20, 10).ToPointfAffine() == Pointf(1, 2));
 
-    // ToPointf (non-affine)
-    ASSERT(p1.ToPointf() == Pointf(1, 2));
+	// ToPointf (non-affine)
+	ASSERT(p1.ToPointf() == Pointf(1, 2));
 
-    // Dot product
-    ASSERT((p1 ^ p2) == 28);
-    
-    // Cross product
-    ASSERT((p1 % Point3D(4, 5, 6)) == Point3D(-3, 6, -3));
+	// Dot product
+	ASSERT((p1 ^ p2) == 28);
+	
+	// Cross product
+	ASSERT((p1 % Point3D(4, 5, 6)) == Point3D(-3, 6, -3));
 
 	// Farthest Axis
 	ASSERT(Point3D(1, 2, 10).FarthestAxis() == Point3D(0, 0, 1));
@@ -67,11 +67,11 @@ void TestPoint3D()
 	// Mid
 	ASSERT(Mid(Point3D(0, 0, 0), Point3D(2, 2, 2)) == Point3D(1, 1, 1));
 
-    // Normalize
-    ASSERT(fabs(p1.Normalized().Length() - 1.0) < 1e-10);
+	// Normalize
+	ASSERT(fabs(p1.Normalized().Length() - 1.0) < 1e-10);
 	
-    // Offset
-    ASSERT(p1.Offseted(1, 1, 1) == Point3D(2, 3, 4));
+	// Offset
+	ASSERT(p1.Offseted(1, 1, 1) == Point3D(2, 3, 4));
 
 	// Distance
 	ASSERT(Point3D(2, 0, 0).DistanceToLine(Point3D(0, 0, 0), Point3D(0, 1, 0)) == 2);
@@ -84,10 +84,10 @@ void TestPoint3D()
 	double dotproduct = 0.0;
 
 	// Orthogonal: Vector is perpendicular to "against"
-    dotproduct = Orthogonal(po, against) ^ against;
-    ASSERT(IsEpsqual(dotproduct, 0.0));
-    
-    // Orthogonal: Preserve a component perpendicular to "against"
+	dotproduct = Orthogonal(po, against) ^ against;
+	ASSERT(IsEpsqual(dotproduct, 0.0));
+	
+	// Orthogonal: Preserve a component perpendicular to "against"
 	po = { 1, 0, 3 };
 	ASSERT(IsEpsqual(Orthogonal(po, Point3D(0, 1, 0)), po));
 
@@ -100,8 +100,8 @@ void TestPoint3D()
 	ASSERT(IsEpsqual(sqrt(Orthonormal(po, against).Squared()), 1.0));
 
 	// Orthonormal: Vector is perpendicular to against
-    dotproduct = Orthonormal(po, against) ^ against;
-    ASSERT(IsEpsqual(dotproduct, 0.0));
+	dotproduct = Orthonormal(po, against) ^ against;
+	ASSERT(IsEpsqual(dotproduct, 0.0));
 
 	// Hash
 	ASSERT(p1.GetHashValue() == CombineHash(p1.x, p1.y, p1.z));
@@ -122,50 +122,50 @@ void TestPoint3D()
 
 void TestPoint4D()
 {
-    Point4D p1(1, 2, 3, 1);
-    Point4D p2(2, 4, 6, 2);
-    Point4D zero;
+	Point4D p1(1, 2, 3, 1);
+	Point4D p2(2, 4, 6, 2);
+	Point4D zero;
 
-    // Component access
-    ASSERT(p1.x == 1 && p1.y == 2 && p1.z == 3 && p1.w == 1);
+	// Component access
+	ASSERT(p1.x == 1 && p1.y == 2 && p1.z == 3 && p1.w == 1);
 
-    // Zero
-    ASSERT(zero.IsZero());
-    
-    // Null handling
-    Point4D n = Null;
-    ASSERT(IsNull(n));
-    
+	// Zero
+	ASSERT(zero.IsZero());
+	
+	// Null handling
+	Point4D n = Null;
+	ASSERT(IsNull(n));
+	
 	// Check unit vector
 	ASSERT(Point4D(1, 0, 0, 0).IsUnit());
 	ASSERT(Point4D(0.7071, 0, 0.7071, 0).IsUnit());
 
-    // Basic equality
-    ASSERT(p1 * 2 == p2);
-    ASSERT(p2 / 2 == p1);
+	// Basic equality
+	ASSERT(p1 * 2 == p2);
+	ASSERT(p2 / 2 == p1);
 
-    // Basic math
-    ASSERT(p2 - p1 == p1);
-    ASSERT(-p1 + p1 == Point4D(0, 0, 0, 0));
+	// Basic math
+	ASSERT(p2 - p1 == p1);
+	ASSERT(-p1 + p1 == Point4D(0, 0, 0, 0));
 	
 	// ToPoint3DAffine
-    ASSERT(Point4D(10, 20, 30, 10).ToPoint3DAffine() == Point3D(1, 2, 3));
+	ASSERT(Point4D(10, 20, 30, 10).ToPoint3DAffine() == Point3D(1, 2, 3));
 
-    // ToPoint3D (non-affine)
-    ASSERT(p1.ToPoint3D() == Point3D(1, 2, 3));
+	// ToPoint3D (non-affine)
+	ASSERT(p1.ToPoint3D() == Point3D(1, 2, 3));
 
-    // ToPointfAffine
-    ASSERT(Point4D(10, 20, 10, 0).ToPointfAffine() == Pointf(1, 2));
+	// ToPointfAffine
+	ASSERT(Point4D(10, 20, 10, 0).ToPointfAffine() == Pointf(1, 2));
 
-    // ToPointf (non-affine)
-    ASSERT(p1.ToPointf() == Pointf(1, 2));
+	// ToPointf (non-affine)
+	ASSERT(p1.ToPointf() == Pointf(1, 2));
 
-    // Dot product
-    ASSERT((p1 ^ p2) == 30);
+	// Dot product
+	ASSERT((p1 ^ p2) == 30);
 
-    // Scalar operations
-    ASSERT(p1 * 2 == p2);
-    ASSERT(p2 / 2 == p1);
+	// Scalar operations
+	ASSERT(p1 * 2 == p2);
+	ASSERT(p2 / 2 == p1);
 
 	// Farthest axis
 	ASSERT(Point4D(1, 2, 10, 12).FarthestAxis() == Point4D(0, 0, 0, 1));
@@ -182,11 +182,11 @@ void TestPoint4D()
 	// Mid
 	ASSERT(Mid(Point4D(0, 0, 0, 0), Point4D(2, 2, 2, 2)) == Point4D(1, 1, 1, 1));
 
-    // Normalize
-    ASSERT(fabs(p1.Normalized().Length() - 1.0) < 1e-10);
+	// Normalize
+	ASSERT(fabs(p1.Normalized().Length() - 1.0) < 1e-10);
 	
-    // Offset
-    ASSERT(p1.Offseted(1, 1, 1, 1) == Point4D(2, 3, 4, 2));
+	// Offset
+	ASSERT(p1.Offseted(1, 1, 1, 1) == Point4D(2, 3, 4, 2));
 	
 	// Hash
 	ASSERT(p1.GetHashValue() == CombineHash(p1.x, p1.y, p1.z, p1.w));
@@ -196,10 +196,10 @@ void TestPoint4D()
 	double dotproduct = 0.0;
 
 	// Orthogonal: Vector is perpendicular to "against"
-    dotproduct = Orthogonal(po, against) ^ against;
-    ASSERT(IsEpsqual(dotproduct, 0.0));
-    
-    // Orthogonal: Preserve a component perpendicular to "against"
+	dotproduct = Orthogonal(po, against) ^ against;
+	ASSERT(IsEpsqual(dotproduct, 0.0));
+	
+	// Orthogonal: Preserve a component perpendicular to "against"
 	po = { 1, 0, 3, 4 };
 	ASSERT(IsEpsqual(Orthogonal(po, Point4D(0, 1, 0, 0)), po));
 
@@ -212,95 +212,95 @@ void TestPoint4D()
 	ASSERT(IsEpsqual(sqrt(Orthonormal(po, against).Squared()), 1.0));
 
 	// Orthonormal: Vector is perpendicular to against
-    dotproduct = Orthonormal(po, against) ^ against;
-    ASSERT(IsEpsqual(dotproduct, 0.0));
+	dotproduct = Orthonormal(po, against) ^ against;
+	ASSERT(IsEpsqual(dotproduct, 0.0));
 	
 	// Hash
 	ASSERT(p1.GetHashValue() == CombineHash(p1.x, p1.y, p1.z, p1.w));
 
-    // JSON serialization
-    String json = StoreAsJson(p1);
-    Point4D pj;
-    LoadFromJson(pj, json);
-    ASSERT(pj == p1);
+	// JSON serialization
+	String json = StoreAsJson(p1);
+	Point4D pj;
+	LoadFromJson(pj, json);
+	ASSERT(pj == p1);
 
 	// XML serialization
-    String xml = StoreAsXML(p1);
-    Point4D px;
-    LoadFromXML(px, xml);
-    ASSERT(px == p1);
-    
-    LOG("Point4D: All tests passed.");
+	String xml = StoreAsXML(p1);
+	Point4D px;
+	LoadFromXML(px, xml);
+	ASSERT(px == p1);
+	
+	LOG("Point4D: All tests passed.");
 }
 
 void TestMatrix4D()
 {
 	// Point3D tests
 	{
-	    Point3D p(1.0, 0.0, 0.0);
+		Point3D p(1.0, 0.0, 0.0);
 	
-	    // Rotation (90 degrees Z)
-	    Matrix4D rz90 = Matrix4D::RotationZ(M_PI / 2.0);
-	    ASSERT(IsEpsqual(p * rz90, Point3D(0.0, 1.0, 0.0)));
+		// Rotation (90 degrees Z)
+		Matrix4D rz90 = Matrix4D::RotationZ(M_PI / 2.0);
+		ASSERT(IsEpsqual(p * rz90, Point3D(0.0, 1.0, 0.0)));
 	
-	    // Scaling
-	    Matrix4D scale = Matrix4D::Scale(2.0, 3.0, 4.0);
-	    ASSERT(IsEpsqual(Point3D(1.0, 1.0, 1.0) * scale, Point3D(2.0, 3.0, 4.0)));
+		// Scaling
+		Matrix4D scale = Matrix4D::Scale(2.0, 3.0, 4.0);
+		ASSERT(IsEpsqual(Point3D(1.0, 1.0, 1.0) * scale, Point3D(2.0, 3.0, 4.0)));
 	
-	    // Translation
-	    Matrix4D trans = Matrix4D::Translation(5.0, -3.0, 2.0);
-	    ASSERT(IsEpsqual(Point3D(1.0, 1.0, 1.0) * trans, Point3D(6.0, -2.0, 3.0)));
+		// Translation
+		Matrix4D trans = Matrix4D::Translation(5.0, -3.0, 2.0);
+		ASSERT(IsEpsqual(Point3D(1.0, 1.0, 1.0) * trans, Point3D(6.0, -2.0, 3.0)));
 	}
 
 	// Point4D tests
 	{
-	    Point4D p(1.0, 2.0, 3.0, 1.0);
-	    Matrix4D id = Matrix4D::Identity();
+		Point4D p(1.0, 2.0, 3.0, 1.0);
+		Matrix4D id = Matrix4D::Identity();
 	
-	    // Identity
-	    ASSERT(IsEpsqual(p * id, p));
+		// Identity
+		ASSERT(IsEpsqual(p * id, p));
 	
-	    // Scaling
-	    Matrix4D scale = Matrix4D::Scale(2.0, 2.0, 2.0);
-	    ASSERT(IsEpsqual(p * scale, Point4D(2.0, 4.0, 6.0, 1.0)));
+		// Scaling
+		Matrix4D scale = Matrix4D::Scale(2.0, 2.0, 2.0);
+		ASSERT(IsEpsqual(p * scale, Point4D(2.0, 4.0, 6.0, 1.0)));
 
-	    // Translation
-	    Matrix4D trans = Matrix4D::Translation(1.0, 2.0, 3.0);
-	    ASSERT(IsEpsqual(p * trans, Point4D(2.0, 4.0, 6.0, 1.0)));
+		// Translation
+		Matrix4D trans = Matrix4D::Translation(1.0, 2.0, 3.0);
+		ASSERT(IsEpsqual(p * trans, Point4D(2.0, 4.0, 6.0, 1.0)));
 
-	    // Homogeneous stability (w != 1)
-	    Point4D q(1.0, 2.0, 3.0, 2.0);
-	    ASSERT(IsEpsqual(q * id, q));
+		// Homogeneous stability (w != 1)
+		Point4D q(1.0, 2.0, 3.0, 2.0);
+		ASSERT(IsEpsqual(q * id, q));
 	}
 
 	// Matrix4D tests
 	{
-	    // Rotation
-	    Matrix4D rx = Matrix4D::RotationX(M_PI / 4.0);
-	    Matrix4D ry = Matrix4D::RotationY(M_PI / 4.0);
-	    Matrix4D rz = Matrix4D::RotationZ(M_PI / 4.0);
+		// Rotation
+		Matrix4D rx = Matrix4D::RotationX(M_PI / 4.0);
+		Matrix4D ry = Matrix4D::RotationY(M_PI / 4.0);
+		Matrix4D rz = Matrix4D::RotationZ(M_PI / 4.0);
 	
-	    ASSERT(IsEpsqual(rx * rx, Matrix4D::RotationX(M_PI / 2.0)));
-	    ASSERT(IsEpsqual(ry * ry, Matrix4D::RotationY(M_PI / 2.0)));
-	    ASSERT(IsEpsqual(rz * rz, Matrix4D::RotationZ(M_PI / 2.0)));
+		ASSERT(IsEpsqual(rx * rx, Matrix4D::RotationX(M_PI / 2.0)));
+		ASSERT(IsEpsqual(ry * ry, Matrix4D::RotationY(M_PI / 2.0)));
+		ASSERT(IsEpsqual(rz * rz, Matrix4D::RotationZ(M_PI / 2.0)));
 	
-	    // Scaling
-	    Matrix4D scale = Matrix4D::Scale(2.0, 3.0, 4.0);
-	    ASSERT(IsEpsqual(scale * scale, Matrix4D::Scale(4.0, 9.0, 16.0)));
+		// Scaling
+		Matrix4D scale = Matrix4D::Scale(2.0, 3.0, 4.0);
+		ASSERT(IsEpsqual(scale * scale, Matrix4D::Scale(4.0, 9.0, 16.0)));
 	
-	    // Translation
-	    Matrix4D trans = Matrix4D::Translation(1.0, 2.0, 3.0);
-	    ASSERT(IsEpsqual(trans * trans, Matrix4D::Translation(2.0, 4.0, 6.0)));
+		// Translation
+		Matrix4D trans = Matrix4D::Translation(1.0, 2.0, 3.0);
+		ASSERT(IsEpsqual(trans * trans, Matrix4D::Translation(2.0, 4.0, 6.0)));
 	
-	    // Determinant
-	    Matrix4D d(2, 0, 0, 0,
-	               0, 3, 0, 0,
-	               0, 0, 4, 0,
-	               0, 0, 0, 1);
-	    ASSERT(d.Determinant() == 2 * 3 * 4);
+		// Determinant
+		Matrix4D d(2, 0, 0, 0,
+				0, 3, 0, 0,
+				0, 0, 4, 0,
+				0, 0, 0, 1);
+		ASSERT(d.Determinant() == 2 * 3 * 4);
 	
-	    // Inverse
-	    ASSERT(IsEpsqual(d * d.Inverse(), Matrix4D::Identity()));
+		// Inverse
+		ASSERT(IsEpsqual(d * d.Inverse(), Matrix4D::Identity()));
 	}
 
 	LOG("Matrix4D: All tests passed.");
