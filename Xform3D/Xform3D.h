@@ -850,16 +850,7 @@ Matrix4_<T> Matrix4_<T>::FastInverse() const
 template<typename T> // Fuzzy comparison
 bool IsEpsqual(const Matrix4_<T>& m1, const Matrix4_<T>& m2, T epsilon = std::numeric_limits<T>::epsilon())
 {
-    static_assert(std::is_floating_point<T>::value, "IsEpsqual: T must be a floating-point type");
-
-    const auto Epsqual = [epsilon](T a, T b) {
-        return abs(a - b) <= epsilon * max(T(1), max(abs(a), abs(b)));
-    };
-
-    return Epsqual(m1.x.x, m2.x.x) && Epsqual(m1.x.y, m2.x.y) && Epsqual(m1.x.z, m2.x.z) && Epsqual(m1.x.w, m2.x.w)
-        && Epsqual(m1.y.x, m2.y.x) && Epsqual(m1.y.y, m2.y.y) && Epsqual(m1.y.z, m2.y.z) && Epsqual(m1.y.w, m2.y.w)
-        && Epsqual(m1.z.x, m2.z.x) && Epsqual(m1.z.y, m2.z.y) && Epsqual(m1.z.z, m2.z.z) && Epsqual(m1.z.w, m2.z.w)
-        && Epsqual(m1.w.x, m2.w.x) && Epsqual(m1.w.y, m2.w.y) && Epsqual(m1.w.z, m2.w.z) && Epsqual(m1.w.w, m2.w.w);
+	return IsEpsqual(m1.x, m2.x) && IsEpsqual(m1.y, m2.y) && IsEpsqual(m1.z, m2.z) && IsEpsqual(m1.w, m2.w);
 }
 
 using Matrix4D  = Matrix4_<double>;
