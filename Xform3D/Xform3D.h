@@ -444,6 +444,7 @@ struct Matrix4_ : Moveable<Matrix4_<T>> {
     bool               IsIdentity() const;
     bool               IsZero() const                                          { return x.IsZero() && y.IsZero() && z.IsZero() && w.IsZero(); }
     bool               IsNullInstance() const                                  { return IsNull(w); }
+    bool               IsAffine() const                                        { return w.w == 1 && w.x == 0 && w.y == 0 && w.z == 0; }
 
     static Matrix4_    Translation(const Point3_<T>& p);
     static Matrix4_    Translation(T x, T y, T z);

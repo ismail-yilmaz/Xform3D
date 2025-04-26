@@ -275,6 +275,13 @@ void TestMatrix4D()
 
 	// Matrix4D tests
 	{
+		// Is Affine?
+		ASSERT(Matrix4D::Identity().IsAffine());
+		ASSERT(Matrix4D::MirrorX().IsAffine());
+		ASSERT(Matrix4D::MirrorY().IsAffine());
+		ASSERT(Matrix4D::MirrorZ().IsAffine());
+		ASSERT(!Matrix4D::Zero().IsAffine());
+		
 		// Rotation
 		Matrix4D rx = Matrix4D::RotationX(M_PI / 4.0);
 		Matrix4D ry = Matrix4D::RotationY(M_PI / 4.0);
