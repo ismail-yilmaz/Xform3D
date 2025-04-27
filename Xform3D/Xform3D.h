@@ -550,8 +550,8 @@ struct Box3_ : Moveable<Box3_<T>> {
     operator       Ref() const                                     { return AsRef(*this); }
 
     void           Serialize(Stream& s)                            { s % lo % hi; }
-    void           Jsonize(JsonIO& jio)                            { jio("lo", lo)("hi", hi); }
-    void           Xmlize(XmlIO& xio)                              { lo.Xmlize(xio); hi.Xmlize(xio); }
+    void           Jsonize(JsonIO& jio)                            { jio("lo_x", lo.x)("lo_y", lo.y)("lo_z", lo.z)("hi_x", hi.x)("hi_y", hi.y)("hi_z", hi.z); }
+    void           Xmlize(XmlIO& xio)                              { xio.Attr("lo_x", lo.x).Attr("lo_y", lo.y).Attr("lo_z", lo.z).Attr("hi_x", hi.x).Attr("hi_y", hi.y).Attr("hi_z", hi.z); }
 
     int            Compare(const Box3_&) const                     { NEVER(); return 0; }
     int            PolyCompare(const Value&) const                 { NEVER(); return 0; }

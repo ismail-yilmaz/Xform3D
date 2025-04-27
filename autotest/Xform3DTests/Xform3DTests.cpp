@@ -738,7 +738,7 @@ void TestBox3D()
 		LoadFromJson(box1, json);
 		ASSERT(box1 == box);
 	
-		box = Null;
+		box1 = Null;
 		
 		// XML
 		String xml = StoreAsXML(box);
