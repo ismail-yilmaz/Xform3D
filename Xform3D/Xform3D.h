@@ -220,8 +220,6 @@ template<typename T> constexpr Point3_<T> Normal(const Point3_<T>& a, const Poin
 template<typename T> constexpr Point3_<T> Orthogonal(const Point3_<T>& p, const Point3_<T>& against)                 { return p - against * ((p ^ against) / against.Squared()); }
 template<typename T> constexpr Point3_<T> Orthonormal(const Point3_<T>& p, const Point3_<T>& against)                { return UnitVector(Orthogonal(p, against)); }
 
-using Point3D  = Point3_<double>;
-
 template<typename T> // Fuzzy comparison
 bool IsEpsqual(const Point3_<T>& p1, const Point3_<T>& p2, T epsilon = std::numeric_limits<T>::epsilon())
 {
@@ -233,6 +231,8 @@ bool IsEpsqual(const Point3_<T>& p1, const Point3_<T>& p2, T epsilon = std::nume
 
     return Epsqual(p1.x, p2.x) && Epsqual(p1.y, p2.y) && Epsqual(p1.z, p2.z);
 }
+
+using Point3D  = Point3_<double>;
 
 template<typename T>
 struct Point4_ : Moveable<Point4_<T>> {
@@ -404,8 +404,6 @@ template<typename T> constexpr T          DotProduct(const Point4_<T>& a, const 
 template<typename T> constexpr Point4_<T> Orthogonal(const Point4_<T>& p, const Point4_<T>& against)                 { return p - against * ((p ^ against) / against.Squared()); }
 template<typename T> constexpr Point4_<T> Orthonormal(const Point4_<T>& p, const Point4_<T>& against)                { return UnitVector(Orthogonal(p, against)); }
 
-using Point4D  = Point4_<double>;
-
 template<typename T> // Fuzzy comparison
 bool IsEpsqual(const Point4_<T>& p1, const Point4_<T>& p2, T epsilon = std::numeric_limits<T>::epsilon())
 {
@@ -417,6 +415,174 @@ bool IsEpsqual(const Point4_<T>& p1, const Point4_<T>& p2, T epsilon = std::nume
 
     return Epsqual(p1.x, p2.x) && Epsqual(p1.y, p2.y) && Epsqual(p1.z, p2.z) && Epsqual(p1.w, p2.w);
 }
+
+using Point4D  = Point4_<double>;
+
+template<typename T>
+struct Box3_ : Moveable<Box3_<T>> {
+    Point3_<T> lo, hi;
+
+    static_assert(std::is_floating_point<T>::value, "Upp::Box3_<T>: T must be a floating point type");
+    
+    Box3_()                                                                     {}
+    Box3_(Point3_<T> lo, Point3_<T> hi) : lo(lo), hi(hi)                        {}
+    Box3_(T lx, T ly, T lz, T hx, T hy, T hz) : lo(lx, ly, lz), hi(hx, hy, hz)  {}
+    Box3_(const Nuller&)                                                        { SetNull(); }
+    
+    void           Clear()                                         { lo.Clear(); hi.Clear(); }
+    bool           IsZero() const                                  { return lo.IsZero() && hi.IsZero(); }
+    
+    void           SetNull()                                       { lo.SetNull(); hi.SetNull(); }
+    bool           IsNullInstance() const                          { return lo.IsNullInstance() || hi.IsNullInstance(); }
+    
+    T              Width() const                                   { return hi.x - lo.x; }
+    T              Height() const                                  { return hi.y - lo.y; }
+    T              Depth() const                                   { return hi.z - lo.z; }
+    Point3_<T>     Size() const                                    { return hi - lo;     }
+    T              Volume() const                                  { Point3_<T> p = Size(); return p.x * p.y * p.z; }
+    Point3_<T>     Center() const                                  { return (lo + hi) * T(0.5); }
+    T              Diagonal() const                                { return sqrt(Size().Squared()); }
+    
+    void           OffsetX(T dx)                                   { lo.x += dx; hi.x += dx; }
+    void           OffsetY(T dy)                                   { lo.y += dy; hi.y += dy; }
+    void           OffsetZ(T dz)                                   { lo.z += dz; hi.z += dz; }
+    void           Offset(T d)                                     { lo += d; hi += d; }
+    void           Offset(T dx, T dy, T dz)                        { lo.Offset(dx, dy, dz); hi.Offset(dx, dy, dz); }
+    void           Offset(const Point3_<T>& p)                     { lo += p;  hi += p; }
+    
+    Box3_          OffsetedX(T dx) const                           { return { lo.x + dx, lo.y, lo.z, hi.x + dx, hi.y, hi.z }; }
+    Box3_          OffsetedY(T dy) const                           { return { lo.x, lo.y + dy, lo.z, hi.x, hi.y + dy, hi.z }; }
+    Box3_          OffsetedZ(T dz) const                           { return { lo.x, lo.y, lo.z + dz, hi.x, hi.y, hi.z + dz }; }
+    Box3_          Offseted(T d) const                             { return { lo + d, hi + d }; }
+    Box3_          Offseted(T dx, T dy, T dz) const                { return { lo.x + dx, lo.y + dy, lo.z + dz, hi.x + dx, hi.y + dy, hi.z + dz }; }
+    Box3_          Offseted(const Point3_<T>& p) const             { return { lo + p, hi + p }; }
+    
+    void           InflateX(T dx)                                  { lo.x -= dx; hi.x += dx; }
+    void           InflateY(T dy)                                  { lo.y -= dy; hi.y += dy; }
+    void           InflateZ(T dz)                                  { lo.z -= dz; hi.z += dz; }
+    void           Inflate(T d)                                    { lo -= d; hi += d; }
+    void           Inflate(T dx, T dy, T dz)                       { lo.Offset(-dx, -dy, -dz); hi.Offset(dx, dy, dz); }
+    void           Inflate(const Point3_<T>& p)                    { lo -= p; hi += p; }
+
+    Box3_          InflatedX(T dx) const                           { return { lo.x - dx, lo.y, lo.z, hi.x + dx, hi.y, hi.z }; }
+    Box3_          InflatedY(T dy) const                           { return { lo.x, lo.y - dy, lo.z, hi.x, hi.y + dy, hi.z }; }
+    Box3_          InflatedZ(T dz) const                           { return { lo.x, lo.y, lo.z - dz, hi.x, hi.y, hi.z + dz }; }
+    Box3_          Inflated(T d) const                             { return { lo - d,  hi + d }; }
+    Box3_          Inflated(T dx, T dy, T dz) const                { return { lo - Point3_<T>(dx, dy, dz), hi + Point3_<T>( dx, dy, dz) };  }
+    Box3_          Inflated(const Point3_<T>& p) const             { return { lo - p, hi + p }; }
+
+    void           DeflateX(T dx)                                  { lo.x += dx; hi.x -= dx; }
+    void           DeflateY(T dy)                                  { lo.y += dy; hi.y -= dy; }
+    void           DeflateZ(T dz)                                  { lo.z += dz; hi.z -= dz; }
+    void           Deflate(T d)                                    { lo += d; hi -= d; }
+    void           Deflate(T dx, T dy, T dz)                       { lo.Offset(dx, dy, dz); hi.Offset(-dx, -dy, -dz); }
+    void           Deflate(const Point3_<T>& p)                    { lo += p; hi -= p; }
+
+    Box3_          DeflatedX(T dx) const                           { return { lo.x + dx, lo.y, lo.z, hi.x - dx, hi.y, hi.z }; }
+    Box3_          DeflatedY(T dy) const                           { return { lo.x, lo.y + dy, lo.z, hi.x, hi.y - dy, hi.z }; }
+    Box3_          DeflatedZ(T dz) const                           { return { lo.x, lo.y, lo.z + dz, hi.x, hi.y, hi.z - dz }; }
+    Box3_          Deflated(T d) const                             { return { lo + d,  hi - d }; }
+    Box3_          Deflated(T dx, T dy, T dz) const                { return { lo + Point3_<T>(dx, dy, dz), hi - Point3_<T>( dx, dy, dz) };  }
+    Box3_          Deflated(const Point3_<T>& p) const             { return { lo + p, hi - p }; }
+    
+    void           Expand(const Point3_<T>& p)                     { lo = min(lo, p); hi = max(hi, p); }
+    void           Expand(const Box3_& box)                        { Expand(box.lo); Expand(box.hi);   }
+    
+    Box3_          Expanded(const Point3_<T>& p) const             { Box3_ b(lo, hi); b.Expand(p); return b;   }
+    Box3_          Expanded(const Box3_& box) const                { Box3_ b(lo, hi); b.Expand(box); return b; }
+
+    bool           Contains(const Point3_<T>& p) const             { return p.x >= lo.x && p.x <= hi.x && p.y >= lo.y && p.y <= hi.y && p.z >= lo.z && p.z <= hi.z; }
+    bool           Contains(const Box3_& box) const                { return Contains(box.lo) && Contains(box.hi); }
+
+    bool           Intersects(const Box3_& box) const              { return !(box.hi.x < lo.x || box.lo.x > hi.x || box.hi.y < lo.y || box.lo.y > hi.y || box.hi.z < lo.z || box.lo.z > hi.z); }
+    
+    Box3_          Intersection(const Box3_& box) const            { return Intersects(box) ? Box3_(max(lo, box.lo), min (hi, box.hi)) : Null; }
+
+    Box3_          Clamped(const Box3_& box) const                 { return { max(lo, box.lo), min(hi, box.hi) }; }
+    
+    Tuple<Point3_<T>, T>  EnclosingCircle() const                  { return MakeTuple(Center(), Diagonal() * T(0.5)); }
+    
+    Point3_<T>     ClosestPointTo(const Point3_<T>& p) const       { return max(lo, min(hi, p)); }
+    
+    Vector<Point3_<T>> GetCorners() const;
+
+    Box3_&         operator=(const Box3_<T>& box)                  { lo = box.lo; hi = box.hi; return *this;  }
+
+    Box3_&         operator+=(const Box3_& box)                    { lo += box.lo; hi += box.hi; return *this; }
+    Box3_&         operator+=(T t)                                 { lo += t; hi += t; return *this; }
+    Box3_&         operator-=(const Box3_& box)                    { lo -= box.lo ;  hi -= box.hi; return *this; }
+    Box3_&         operator-=(T t)                                 { lo -= t; hi -= t; return *this; }
+    Box3_&         operator*=(const Box3_& box)                    { lo *= box.lo;  hi *= box.hi; return *this; }
+    Box3_&         operator*=(T t)                                 { lo *= t;  hi *= t; return *this; }
+    Box3_&         operator/=(const Box3_& box)                    { lo /= box.lo;  hi /= box.hi; return *this; }
+    Box3_&         operator/=(T t)                                 { lo /= t; hi /= t; return *this; }
+
+    Box3_&         operator++()                                    { ++lo; ++hi; return *this; }
+    Box3_&         operator--()                                    { --lo; --hi; return *this; }
+
+    friend Box3_ operator+(const Box3_& box)                       { return box; }
+    friend Box3_ operator-(const Box3_& box)                       { return Box3_(-box.lo, -box.hi); }
+
+    friend Box3_ operator+(const Box3_& a, const Box3_& b)         { return Box3_(a.lo + b.lo, a.hi + b.hi); }
+    friend Box3_ operator+(const Box3_& a, T t)                    { return Box3_(a.lo + t, a.hi + t); }
+    friend Box3_ operator-(const Box3_& a, const Box3_& b)         { return Box3_(a.lo - b.lo, a.hi - b.hi); }
+    friend Box3_ operator-(const Box3_& a, T t)                    { return Box3_(a.lo - t, a.hi - t); }
+    friend Box3_ operator*(const Box3_& a, const Box3_& b)         { return Box3_(a.lo * b.lo, a.hi * b.hi); }
+    friend Box3_ operator*(const Box3_& a, T t)                    { return Box3_(a.lo * t, a.hi * t); }
+    friend Box3_ operator/(const Box3_& a, const Box3_& b)         { return Box3_(a.lo / b.lo, a.hi / b.hi); }
+    friend Box3_ operator/(const Box3_& a, T t)                    { return Box3_(a.lo / t, a.hi / t); }
+
+    friend bool    operator==(const Box3_& a, const Box3_& b)      { return a.lo == b.lo && a.hi == b.hi; }
+    friend bool    operator!=(const Box3_& a, const Box3_& b)      { return !(a == b); }
+
+    friend Box3_   min(const Box3_& a, const Box3_& b)             { return Box3_(min(a.lo, b.lo), min(a.hi, b.hi)); }
+    friend Box3_   max(const Box3_& a, const Box3_& b)             { return Box3_(max(a.lo, b.lo), max(a.hi, b.hi)); }
+    
+    friend Box3_   Nvl(const Box3_& a, const Box3_& b)             { return IsNull(a) ? b : a; }
+
+    hash_t         GetHashValue() const                            { return CombineHash(lo, hi); }
+
+    String         ToString() const                                { return Format("[lo: %s, hi: %s]", lo, hi); }
+
+    operator       Value() const                                   { return FitsSvoValue<Box3_>() ? SvoToValue(*this) : RichToValue(*this); }
+    Box3_(const  Value& src)                                       { *this = src.Get<Box3_>(); }
+
+    operator       Ref() const                                     { return AsRef(*this); }
+
+    void           Serialize(Stream& s)                            { s % lo % hi; }
+    void           Jsonize(JsonIO& jio)                            { jio("lo", lo)("hi", hi); }
+    void           Xmlize(XmlIO& xio)                              { lo.Xmlize(xio); hi.Xmlize(xio); }
+
+    int            Compare(const Box3_&) const                     { NEVER(); return 0; }
+    int            PolyCompare(const Value&) const                 { NEVER(); return 0; }
+
+};
+
+template<typename T>
+Vector<Point3_<T>> Box3_<T>::GetCorners() const
+{
+    Vector<Point3_<T>> v;
+    v.Reserve(8);
+    
+    v << Point3_<T>(lo.x, lo.y, lo.z)
+      << Point3_<T>(hi.x, lo.y, lo.z)
+      << Point3_<T>(lo.x, hi.y, lo.z)
+      << Point3_<T>(hi.x, hi.y, lo.z)
+      << Point3_<T>(lo.x, lo.y, hi.z)
+      << Point3_<T>(hi.x, lo.y, hi.z)
+      << Point3_<T>(lo.x, hi.y, hi.z)
+      << Point3_<T>(hi.x, hi.y, hi.z);
+      
+    return v;
+}
+
+template<typename T> // Fuzzy comparison
+bool IsEpsqual(const Box3_<T>& b1, const Box3_<T>& b2, T epsilon = std::numeric_limits<T>::epsilon())
+{
+    return IsEpsqual(b1.lo, b2.lo, epsilon) && IsEpsqual(b1.hi, b2.hi, epsilon);
+}
+
+using Box3D = Box3_<double>;
 
 template<typename T>
 struct Matrix4_ : Moveable<Matrix4_<T>> {
@@ -479,105 +645,6 @@ struct Matrix4_ : Moveable<Matrix4_<T>> {
     String             ToString() const                                        { String s; s << "rx: " << x << '\n' << "ry: " << y << '\n' << "rz: " << z << '\n' << "rw: " << w; return s; }
     
 };
-
-template<typename T>
-Matrix4_<T> operator*(const Matrix4_<T>& m1, const Matrix4_<T>& m2)
-{
-    Matrix4_<T> m;
-    m.x.x = m1.x.x * m2.x.x + m1.x.y * m2.y.x + m1.x.z * m2.z.x + m1.x.w * m2.w.x;
-    m.x.y = m1.x.x * m2.x.y + m1.x.y * m2.y.y + m1.x.z * m2.z.y + m1.x.w * m2.w.y;
-    m.x.z = m1.x.x * m2.x.z + m1.x.y * m2.y.z + m1.x.z * m2.z.z + m1.x.w * m2.w.z;
-    m.x.w = m1.x.x * m2.x.w + m1.x.y * m2.y.w + m1.x.z * m2.z.w + m1.x.w * m2.w.w;
-
-    m.y.x = m1.y.x * m2.x.x + m1.y.y * m2.y.x + m1.y.z * m2.z.x + m1.y.w * m2.w.x;
-    m.y.y = m1.y.x * m2.x.y + m1.y.y * m2.y.y + m1.y.z * m2.z.y + m1.y.w * m2.w.y;
-    m.y.z = m1.y.x * m2.x.z + m1.y.y * m2.y.z + m1.y.z * m2.z.z + m1.y.w * m2.w.z;
-    m.y.w = m1.y.x * m2.x.w + m1.y.y * m2.y.w + m1.y.z * m2.z.w + m1.y.w * m2.w.w;
-
-    m.z.x = m1.z.x * m2.x.x + m1.z.y * m2.y.x + m1.z.z * m2.z.x + m1.z.w * m2.w.x;
-    m.z.y = m1.z.x * m2.x.y + m1.z.y * m2.y.y + m1.z.z * m2.z.y + m1.z.w * m2.w.y;
-    m.z.z = m1.z.x * m2.x.z + m1.z.y * m2.y.z + m1.z.z * m2.z.z + m1.z.w * m2.w.z;
-    m.z.w = m1.z.x * m2.x.w + m1.z.y * m2.y.w + m1.z.z * m2.z.w + m1.z.w * m2.w.w;
-
-    m.w.x = m1.w.x * m2.x.x + m1.w.y * m2.y.x + m1.w.z * m2.z.x + m1.w.w * m2.w.x;
-    m.w.y = m1.w.x * m2.x.y + m1.w.y * m2.y.y + m1.w.z * m2.z.y + m1.w.w * m2.w.y;
-    m.w.z = m1.w.x * m2.x.z + m1.w.y * m2.y.z + m1.w.z * m2.z.z + m1.w.w * m2.w.z;
-    m.w.w = m1.w.x * m2.x.w + m1.w.y * m2.y.w + m1.w.z * m2.z.w + m1.w.w * m2.w.w;
-    return m;
-}
-
-template<typename T>
-Matrix4_<T>& operator*=(Matrix4_<T>& m1, const Matrix4_<T>& m2)
-{
-    return m1 = m1 * m2;
-}
-
-template<typename T>
-Matrix4_<T> operator/(const Matrix4_<T>& m1, const Matrix4_<T>& m2)
-{
-    return m1 * m2.Inverse();
-}
-
-template<typename T>
-Matrix4_<T>& operator/=(Matrix4_<T>& m1, const Matrix4_<T>& m2)
-{
-    return m1 = m1 / m2;
-}
-
-template<typename T>
-Point4_<T> operator*(const Point4_<T>& p, const Matrix4_<T>& m)
-{
-    return Point4_<T>(m.CX() ^ p, m.CY() ^ p, m.CZ() ^ p, m.CW() ^ p);
-}
-
-template<typename T>
-Matrix4_<T> operator*=(Point4_<T>& p, const Matrix4_<T>& m)
-{
-    return p = p * m;
-}
-
-template<typename T>
-Point3_<T> operator*(const Point3_<T>& p, const Matrix4_<T>& m)
-{
-    return Point4_<T>(
-        p.x * m.x.x + p.y * m.y.x + p.z * m.z.x + m.w.x,
-        p.x * m.x.y + p.y * m.y.y + p.z * m.z.y + m.w.y,
-        p.x * m.x.z + p.y * m.y.z + p.z * m.z.z + m.w.z,
-        p.x * m.x.w + p.y * m.y.w + p.z * m.z.w + m.w.w).ToPoint3DAffine();
-}
-
-template<typename T>
-Matrix4_<T> operator*=(Point3_<T>& p, const Matrix4_<T>& m)
-{
-    return p = p * m;
-}
-
-template<typename T>
-Point_<T> operator*(const Point_<T>& p, const Matrix4_<T>& m)
-{
-    return Point3_<T>(
-        p.x * m.x.x + p.y * m.y.x + m.w.x,
-        p.x * m.x.y + p.y * m.y.y + m.w.y,
-        p.x * m.x.w + p.y * m.y.w + m.w.w).ToPointfAffine();
-}
-
-template<typename T>
-Matrix4_<T> operator*=(Point_<T>& p, const Matrix4_<T>& m)
-{
-    return p = p * m;
-}
-
-template<typename T>
-bool operator==(const Matrix4_<T>& m1, const Matrix4_<T>& m2)
-{
-    return m1.x == m2.x && m1.y == m2.y && m1.z == m2.z && m1.w == m2.w; // Useful in many cases. See IsEpsqual for fuzzy comparison
-}
-
-template<typename T>
-bool operator!=(const Matrix4_<T>& m1, const Matrix4_<T>& m2)
-{
-    return !(m1 == m2);
-}
 
 template<typename T>
 bool Matrix4_<T>::IsIdentity() const
@@ -847,10 +914,165 @@ Matrix4_<T> Matrix4_<T>::FastInverse() const
     return Matrix4_<T>(x.x, y.x, z.x, -x.w, x.y, y.y, z.y, -y.w, x.z, y.z, z.z, -z.w, 0, 0, 0, 1);
 }
 
+template<typename T>
+Matrix4_<T> operator*(const Matrix4_<T>& m1, const Matrix4_<T>& m2)
+{
+    Matrix4_<T> m;
+    m.x.x = m1.x.x * m2.x.x + m1.x.y * m2.y.x + m1.x.z * m2.z.x + m1.x.w * m2.w.x;
+    m.x.y = m1.x.x * m2.x.y + m1.x.y * m2.y.y + m1.x.z * m2.z.y + m1.x.w * m2.w.y;
+    m.x.z = m1.x.x * m2.x.z + m1.x.y * m2.y.z + m1.x.z * m2.z.z + m1.x.w * m2.w.z;
+    m.x.w = m1.x.x * m2.x.w + m1.x.y * m2.y.w + m1.x.z * m2.z.w + m1.x.w * m2.w.w;
+
+    m.y.x = m1.y.x * m2.x.x + m1.y.y * m2.y.x + m1.y.z * m2.z.x + m1.y.w * m2.w.x;
+    m.y.y = m1.y.x * m2.x.y + m1.y.y * m2.y.y + m1.y.z * m2.z.y + m1.y.w * m2.w.y;
+    m.y.z = m1.y.x * m2.x.z + m1.y.y * m2.y.z + m1.y.z * m2.z.z + m1.y.w * m2.w.z;
+    m.y.w = m1.y.x * m2.x.w + m1.y.y * m2.y.w + m1.y.z * m2.z.w + m1.y.w * m2.w.w;
+
+    m.z.x = m1.z.x * m2.x.x + m1.z.y * m2.y.x + m1.z.z * m2.z.x + m1.z.w * m2.w.x;
+    m.z.y = m1.z.x * m2.x.y + m1.z.y * m2.y.y + m1.z.z * m2.z.y + m1.z.w * m2.w.y;
+    m.z.z = m1.z.x * m2.x.z + m1.z.y * m2.y.z + m1.z.z * m2.z.z + m1.z.w * m2.w.z;
+    m.z.w = m1.z.x * m2.x.w + m1.z.y * m2.y.w + m1.z.z * m2.z.w + m1.z.w * m2.w.w;
+
+    m.w.x = m1.w.x * m2.x.x + m1.w.y * m2.y.x + m1.w.z * m2.z.x + m1.w.w * m2.w.x;
+    m.w.y = m1.w.x * m2.x.y + m1.w.y * m2.y.y + m1.w.z * m2.z.y + m1.w.w * m2.w.y;
+    m.w.z = m1.w.x * m2.x.z + m1.w.y * m2.y.z + m1.w.z * m2.z.z + m1.w.w * m2.w.z;
+    m.w.w = m1.w.x * m2.x.w + m1.w.y * m2.y.w + m1.w.z * m2.z.w + m1.w.w * m2.w.w;
+    return m;
+}
+
+template<typename T>
+Matrix4_<T>& operator*=(Matrix4_<T>& m1, const Matrix4_<T>& m2)
+{
+    return m1 = m1 * m2;
+}
+
+template<typename T>
+Matrix4_<T> operator/(const Matrix4_<T>& m1, const Matrix4_<T>& m2)
+{
+    return m1 * m2.Inverse();
+}
+
+template<typename T>
+Matrix4_<T>& operator/=(Matrix4_<T>& m1, const Matrix4_<T>& m2)
+{
+    return m1 = m1 / m2;
+}
+
+template<typename T>
+Point4_<T> operator*(const Point4_<T>& p, const Matrix4_<T>& m)
+{
+    return Point4_<T>(m.CX() ^ p, m.CY() ^ p, m.CZ() ^ p, m.CW() ^ p);
+}
+
+template<typename T>
+Matrix4_<T> operator*=(Point4_<T>& p, const Matrix4_<T>& m)
+{
+    return p = p * m;
+}
+
+template<typename T>
+Point3_<T> operator*(const Point3_<T>& p, const Matrix4_<T>& m)
+{
+    return Point4_<T>(
+        p.x * m.x.x + p.y * m.y.x + p.z * m.z.x + m.w.x,
+        p.x * m.x.y + p.y * m.y.y + p.z * m.z.y + m.w.y,
+        p.x * m.x.z + p.y * m.y.z + p.z * m.z.z + m.w.z,
+        p.x * m.x.w + p.y * m.y.w + p.z * m.z.w + m.w.w).ToPoint3DAffine();
+}
+
+
+template<typename T>
+Matrix4_<T> operator*=(Point3_<T>& p, const Matrix4_<T>& m)
+{
+    return p = p * m;
+}
+
+template<typename T>
+Point_<T> operator*(const Point_<T>& p, const Matrix4_<T>& m)
+{
+    return Point3_<T>(
+        p.x * m.x.x + p.y * m.y.x + m.w.x,
+        p.x * m.x.y + p.y * m.y.y + m.w.y,
+        p.x * m.x.w + p.y * m.y.w + m.w.w).ToPointfAffine();
+}
+
+template<typename T>
+Box3_<T> operator*(const Box3_<T>& box, const Matrix4_<T>& m)
+{
+    if(IsNull(box) || IsNull(m))
+        return Null;
+    Box3_<T> q;
+    for(const Point3_<T>& corner : box.GetCorners())
+        q.Expand(corner * m);
+    return q; // AAAB
+}
+
+template<typename T>
+Box3_<T> Transform(const Box3_<T>& box, const Matrix4_<T>& m)
+{
+    return box * m;
+}
+
+template<typename T>
+Box3_<T> operator^(const Box3_<T>& box, const Matrix4_<T>& m)
+{
+   if(IsNull(box) || IsNull(m))
+        return Null;
+
+    Point3_<T> center = box.Center();
+    Point3_<T> extent = box.Size() * T(0.5);
+    
+    Point3_<T> newcenter = center * m;
+    Point3_<T> newextent;
+
+    newextent.x = extent.x * abs(m.x.x) + extent.y * abs(m.y.x) + extent.z * abs(m.z.x);
+    newextent.y = extent.x * abs(m.x.y) + extent.y * abs(m.y.y) + extent.z * abs(m.z.y);
+    newextent.z = extent.x * abs(m.x.z) + extent.y * abs(m.y.z) + extent.z * abs(m.z.z);
+
+    return Box3_<T>(newcenter - newextent, newcenter + newextent);
+}
+
+template<typename T>
+Box3_<T> TransformAffine(const Box3_<T>& box, const Matrix4_<T>& m)
+{
+    return box ^ m;
+}
+
+template<typename T>
+Box3_<T> operator%(const Box3_<T>& box, const Matrix4_<T>& m)
+{
+    return m.IsAffine() ? TransformAffine(box, m) : Transform(box, m);
+}
+
+template<typename T>
+Box3_<T> OptimizedTransform(const Box3_<T>& box, const Matrix4_<T>& m)
+{
+    return box % m;
+}
+
+template<typename T>
+Matrix4_<T> operator*=(Point_<T>& p, const Matrix4_<T>& m)
+{
+    return p = p * m;
+}
+
+template<typename T>
+bool operator==(const Matrix4_<T>& m1, const Matrix4_<T>& m2)
+{
+    return m1.x == m2.x && m1.y == m2.y && m1.z == m2.z && m1.w == m2.w; // Useful in many cases. See IsEpsqual for fuzzy comparison
+}
+
+template<typename T>
+bool operator!=(const Matrix4_<T>& m1, const Matrix4_<T>& m2)
+{
+    return !(m1 == m2);
+}
+
 template<typename T> // Fuzzy comparison
 bool IsEpsqual(const Matrix4_<T>& m1, const Matrix4_<T>& m2, T epsilon = std::numeric_limits<T>::epsilon())
 {
-	return IsEpsqual(m1.x, m2.x) && IsEpsqual(m1.y, m2.y) && IsEpsqual(m1.z, m2.z) && IsEpsqual(m1.w, m2.w);
+    return IsEpsqual(m1.x, m2.x, epsilon) && IsEpsqual(m1.y, m2.y, epsilon)
+        && IsEpsqual(m1.z, m2.z, epsilon) && IsEpsqual(m1.w, m2.w, epsilon);
 }
 
 using Matrix4D  = Matrix4_<double>;

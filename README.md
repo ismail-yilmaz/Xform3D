@@ -8,7 +8,7 @@
 
 - **Row-Major Layout with Left-Handed Coordinates:** Matches typical 3D rendering setups for clarity and compatibility.
 
-- **Basic 3D Geometry (`Point3_`, `Point4_`):** Simple 3D point/vector classes with support for `Null` value handling and homogeneous coordinates.
+- **Basic 3D Geometry (`Point3_`, `Point4_`, `Box3_`):** Simple 3D point/vector classes with support for `Null` value handling and homogeneous coordinates.
 
 ## Examples
 

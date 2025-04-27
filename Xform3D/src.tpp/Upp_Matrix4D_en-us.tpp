@@ -11,6 +11,7 @@ topic "Matrix4D";
 [2 $$0,0#00000000000000000000000000000000:Default]
 [{_} 
 [ {{10000@(113.42.0) [s0;%% [*@7;4 Matrix4`_]]}}&]
+[s0; &]
 [s1;:noref: [@(0.0.255)3 template][3  <][@(0.0.255)3 typename][3  ][*@4;3 T][3 >]&]
 [s1;:Upp`:`:Matrix4`_: [* Matrix4`_] [@(0.0.255) :] Moveable<[* Matrix4`_]<[*@4;3 T]>>&]
 [s2;%% A 4×4 matrix template for 3D transformations and projections. 
@@ -302,6 +303,60 @@ operator[@(0.0.255) `*]([@(0.0.255) const] Point`_<T>[@(0.0.255) `&]
 [s2;%% Transforms a 2D point [%-*@3 p] by matrix [%-*@3 m], treating 
 it as (x, y, 0, 1), and converts back via [^topic`:`/`/XForm3D`/src`/Upp`_Point4D`_en`-us`#Upp`:`:Point4`_`:`:ToPointfAffine`(`)const^ T
 oPointfAffine]().&]
+[s3; &]
+[s4; &]
+[s5;:Upp`:`:operator`*`(const Box3`_`&`,const Matrix4`_`&`): [@(0.0.255) template] 
+<[@(0.0.255) typename] T>&]
+[s5;:Upp`:`:operator`*`(const Box3`_`&`,const Matrix4`_`&`): Box3`_<T> 
+operator[@(0.0.255) `*]([@(0.0.255) const] Box3`_<T>[@(0.0.255) `&] 
+[*@3 box], [@(0.0.255) const] Matrix4`_<T>[@(0.0.255) `&] [*@3 m])&]
+[s5;:Upp`:`:Transform`(const Box3`_`&`,const Matrix4`_`&`): [@(0.0.255) template] 
+<[@(0.0.255) typename] T>&]
+[s5;:Upp`:`:Transform`(const Box3`_`&`,const Matrix4`_`&`): Box3`_<T> 
+[* Transform]([@(0.0.255) const] Box3`_<T>[@(0.0.255) `&] [*@3 box], 
+[@(0.0.255) const] Matrix4`_<T>[@(0.0.255) `&] [*@3 m])&]
+[s2;%% Transforms the [%-*@3 box ]by the given matrix [%-*@3 m ]by applying 
+the matrix to all 8 corners individually, then recomputing the 
+axis`-aligned bounding box (AABB) that encloses the transformed 
+corners. Returns a new box enclosing the transformed corners. 
+If [%-*@3 box ]or [%-*@3 m ]is null, returns Null. General (non`-affine) 
+transformation. Works correctly for all matrix types, including 
+projections.&]
+[s3; &]
+[s4; &]
+[s5;:Upp`:`:operator`^`(const Box3`_`&`,const Matrix4`_`&`): [@(0.0.255) template] 
+<[@(0.0.255) typename] T>&]
+[s5;:Upp`:`:operator`^`(const Box3`_`&`,const Matrix4`_`&`): Box3`_<T> 
+operator[@(0.0.255) `^]([@(0.0.255) const] Box3`_<T>[@(0.0.255) `&] 
+[*@3 box], [@(0.0.255) const] Matrix4`_<T>[@(0.0.255) `&] [*@3 m])&]
+[s5;:Upp`:`:TransformAffine`(const Box3`_`&`,const Matrix4`_`&`): [@(0.0.255) template] 
+<[@(0.0.255) typename] T>&]
+[s5;:Upp`:`:TransformAffine`(const Box3`_`&`,const Matrix4`_`&`): Box3`_<T> 
+[* TransformAffine]([@(0.0.255) const] Box3`_<T>[@(0.0.255) `&] [*@3 box], 
+[@(0.0.255) const] Matrix4`_<T>[@(0.0.255) `&] [*@3 m])&]
+[s0;l288;%% Fast affine transform. Instead of transforming all 8 
+corners of the [%-*@3 box], it transforms the center and extents 
+separately, taking advantage of affine matrix properties (no 
+projection or perspective). Returns a new box enclosing the transformed 
+corners. If [%-*@3 box ]or [%-*@3 m ]is null, returns Null. Note 
+that this should be used only if the [%-*@3 m ]is guaranteed affine 
+(no perspective).&]
+[s3; &]
+[s4; &]
+[s5;:Upp`:`:operator`%`(const Box3`_`&`,const Matrix4`_`&`): [@(0.0.255) template] 
+<[@(0.0.255) typename] T>&]
+[s5;:Upp`:`:operator`%`(const Box3`_`&`,const Matrix4`_`&`): Box3`_<T> 
+operator[@(0.0.255) %]([@(0.0.255) const] Box3`_<T>[@(0.0.255) `&] 
+[*@3 box], [@(0.0.255) const] Matrix4`_<T>[@(0.0.255) `&] [*@3 m])&]
+[s5;:Upp`:`:OptimizedTransform`(const Box3`_`&`,const Matrix4`_`&`): [@(0.0.255) templa
+te] <[@(0.0.255) typename] T>&]
+[s5;:Upp`:`:OptimizedTransform`(const Box3`_`&`,const Matrix4`_`&`): Box3`_<T> 
+[* OptimizedTransform]([@(0.0.255) const] Box3`_<T>[@(0.0.255) `&] 
+[*@3 box], [@(0.0.255) const] Matrix4`_<T>[@(0.0.255) `&] [*@3 m])&]
+[s2;%% Smart (optimized) transform. If m is affine uses the optimized 
+AffineTransform function. Otherwise falls back to general Transform 
+algorithm. Returns a new box enclosing the transformed corners. 
+If [%-*@3 box ]or [%-*@3 m ]is null, returns Null.&]
 [s3; &]
 [s4; &]
 [s5;:Upp`:`:operator`*`=`(Point`_`&`,const Matrix4`_`&`): [@(0.0.255) template] 
