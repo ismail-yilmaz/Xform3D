@@ -520,17 +520,17 @@ struct Box3_ : Moveable<Box3_<T>> {
     Box3_&         operator++()                                    { ++lo; ++hi; return *this; }
     Box3_&         operator--()                                    { --lo; --hi; return *this; }
 
-    friend Box3_ operator+(const Box3_& box)                       { return box; }
-    friend Box3_ operator-(const Box3_& box)                       { return Box3_(-box.lo, -box.hi); }
+    friend Box3_   operator+(const Box3_& box)                       { return box; }
+    friend Box3_   operator-(const Box3_& box)                       { return Box3_(-box.lo, -box.hi); }
 
-    friend Box3_ operator+(const Box3_& a, const Box3_& b)         { return Box3_(a.lo + b.lo, a.hi + b.hi); }
-    friend Box3_ operator+(const Box3_& a, T t)                    { return Box3_(a.lo + t, a.hi + t); }
-    friend Box3_ operator-(const Box3_& a, const Box3_& b)         { return Box3_(a.lo - b.lo, a.hi - b.hi); }
-    friend Box3_ operator-(const Box3_& a, T t)                    { return Box3_(a.lo - t, a.hi - t); }
-    friend Box3_ operator*(const Box3_& a, const Box3_& b)         { return Box3_(a.lo * b.lo, a.hi * b.hi); }
-    friend Box3_ operator*(const Box3_& a, T t)                    { return Box3_(a.lo * t, a.hi * t); }
-    friend Box3_ operator/(const Box3_& a, const Box3_& b)         { return Box3_(a.lo / b.lo, a.hi / b.hi); }
-    friend Box3_ operator/(const Box3_& a, T t)                    { return Box3_(a.lo / t, a.hi / t); }
+    friend Box3_   operator+(const Box3_& a, const Box3_& b)         { return Box3_(a.lo + b.lo, a.hi + b.hi); }
+    friend Box3_   operator+(const Box3_& a, T t)                    { return Box3_(a.lo + t, a.hi + t); }
+    friend Box3_   operator-(const Box3_& a, const Box3_& b)         { return Box3_(a.lo - b.lo, a.hi - b.hi); }
+    friend Box3_   operator-(const Box3_& a, T t)                    { return Box3_(a.lo - t, a.hi - t); }
+    friend Box3_   operator*(const Box3_& a, const Box3_& b)         { return Box3_(a.lo * b.lo, a.hi * b.hi); }
+    friend Box3_   operator*(const Box3_& a, T t)                    { return Box3_(a.lo * t, a.hi * t); }
+    friend Box3_   operator/(const Box3_& a, const Box3_& b)         { return Box3_(a.lo / b.lo, a.hi / b.hi); }
+    friend Box3_   operator/(const Box3_& a, T t)                    { return Box3_(a.lo / t, a.hi / t); }
 
     friend bool    operator==(const Box3_& a, const Box3_& b)      { return a.lo == b.lo && a.hi == b.hi; }
     friend bool    operator!=(const Box3_& a, const Box3_& b)      { return !(a == b); }
