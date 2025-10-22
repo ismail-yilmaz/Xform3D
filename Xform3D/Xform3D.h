@@ -620,6 +620,8 @@ struct Matrix4_ : Moveable<Matrix4_<T>> {
     static Matrix4_    RotationX(T angle);
     static Matrix4_    RotationY(T angle);
     static Matrix4_    RotationZ(T angle);
+    static Matrix4_    Rotation(const Point3_<T>& angles);
+    static Matrix4_    Rotation(T anglex, T angley, T anglez);
     static Matrix4_    Rotation(const Point3_<T>& axis, T angle);
     static Matrix4_    Rotation(T ax, T ay, T az, T angle);
     static Matrix4_    Perspective(T fov, T aspectratio, T fnear, T ffar);
@@ -706,6 +708,18 @@ Matrix4_<T> Matrix4_<T>::RotationZ(T angle)
     T c = cos(angle);
     T s = sin(angle);
     return Matrix4_<T>(c, s, 0, 0, -s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+}
+
+template<typename T>
+Matrix4_<T> Matrix4_<T>::Rotation(const Point3_<T>& angles)
+{
+	return RotationX(angles.x) * RotationY(angles.y) * RotationZ(angles.z);
+}
+
+template<typename T>
+Matrix4_<T> Matrix4_<T>::Rotation(T anglex, T angley, T anglez)
+{
+	return RotationX(anglex) * RotationY(angley) * RotationZ(anglez);
 }
 
 template<typename T>
