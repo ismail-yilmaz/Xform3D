@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD 3-Clause "New" or "Revised" License
-// Copyright (c) 2025, İsmail Yılmaz
+// Copyright (c) 2025-26, İsmail Yılmaz
 
 #ifndef _XForm3D_Xform3D_h_
 #define _XForm3D_Xform3D_h_
@@ -220,8 +220,6 @@ template<typename T> constexpr Point3_<T> Normal(const Point3_<T>& a, const Poin
 template<typename T> constexpr Point3_<T> Orthogonal(const Point3_<T>& p, const Point3_<T>& against)                 { return p - against * ((p ^ against) / against.Squared()); }
 template<typename T> constexpr Point3_<T> Orthonormal(const Point3_<T>& p, const Point3_<T>& against)                { return UnitVector(Orthogonal(p, against)); }
 
-using Point3D  = Point3_<double>;
-
 template<typename T> // Fuzzy comparison
 bool IsEpsqual(const Point3_<T>& p1, const Point3_<T>& p2, T epsilon = std::numeric_limits<T>::epsilon())
 {
@@ -233,6 +231,8 @@ bool IsEpsqual(const Point3_<T>& p1, const Point3_<T>& p2, T epsilon = std::nume
 
     return Epsqual(p1.x, p2.x) && Epsqual(p1.y, p2.y) && Epsqual(p1.z, p2.z);
 }
+
+using Point3D  = Point3_<float>;
 
 template<typename T>
 struct Point4_ : Moveable<Point4_<T>> {
@@ -404,8 +404,6 @@ template<typename T> constexpr T          DotProduct(const Point4_<T>& a, const 
 template<typename T> constexpr Point4_<T> Orthogonal(const Point4_<T>& p, const Point4_<T>& against)                 { return p - against * ((p ^ against) / against.Squared()); }
 template<typename T> constexpr Point4_<T> Orthonormal(const Point4_<T>& p, const Point4_<T>& against)                { return UnitVector(Orthogonal(p, against)); }
 
-using Point4D  = Point4_<double>;
-
 template<typename T> // Fuzzy comparison
 bool IsEpsqual(const Point4_<T>& p1, const Point4_<T>& p2, T epsilon = std::numeric_limits<T>::epsilon())
 {
@@ -417,6 +415,174 @@ bool IsEpsqual(const Point4_<T>& p1, const Point4_<T>& p2, T epsilon = std::nume
 
     return Epsqual(p1.x, p2.x) && Epsqual(p1.y, p2.y) && Epsqual(p1.z, p2.z) && Epsqual(p1.w, p2.w);
 }
+
+using Point4D  = Point4_<float>;
+
+template<typename T>
+struct Box3_ : Moveable<Box3_<T>> {
+    Point3_<T> lo, hi;
+
+    static_assert(std::is_floating_point<T>::value, "Upp::Box3_<T>: T must be a floating point type");
+    
+    Box3_()                                                                     {}
+    Box3_(Point3_<T> lo, Point3_<T> hi) : lo(lo), hi(hi)                        {}
+    Box3_(T lx, T ly, T lz, T hx, T hy, T hz) : lo(lx, ly, lz), hi(hx, hy, hz)  {}
+    Box3_(const Nuller&)                                                        { SetNull(); }
+    
+    void           Clear()                                         { lo.Clear(); hi.Clear(); }
+    bool           IsZero() const                                  { return lo.IsZero() && hi.IsZero(); }
+    
+    void           SetNull()                                       { lo.SetNull(); hi.SetNull(); }
+    bool           IsNullInstance() const                          { return lo.IsNullInstance() || hi.IsNullInstance(); }
+    
+    T              Width() const                                   { return hi.x - lo.x; }
+    T              Height() const                                  { return hi.y - lo.y; }
+    T              Depth() const                                   { return hi.z - lo.z; }
+    Point3_<T>     Size() const                                    { return hi - lo;     }
+    T              Volume() const                                  { Point3_<T> p = Size(); return p.x * p.y * p.z; }
+    Point3_<T>     Center() const                                  { return (lo + hi) * T(0.5); }
+    T              Diagonal() const                                { return sqrt(Size().Squared()); }
+    
+    void           OffsetX(T dx)                                   { lo.x += dx; hi.x += dx; }
+    void           OffsetY(T dy)                                   { lo.y += dy; hi.y += dy; }
+    void           OffsetZ(T dz)                                   { lo.z += dz; hi.z += dz; }
+    void           Offset(T d)                                     { lo += d; hi += d; }
+    void           Offset(T dx, T dy, T dz)                        { lo.Offset(dx, dy, dz); hi.Offset(dx, dy, dz); }
+    void           Offset(const Point3_<T>& p)                     { lo += p;  hi += p; }
+    
+    Box3_          OffsetedX(T dx) const                           { return { lo.x + dx, lo.y, lo.z, hi.x + dx, hi.y, hi.z }; }
+    Box3_          OffsetedY(T dy) const                           { return { lo.x, lo.y + dy, lo.z, hi.x, hi.y + dy, hi.z }; }
+    Box3_          OffsetedZ(T dz) const                           { return { lo.x, lo.y, lo.z + dz, hi.x, hi.y, hi.z + dz }; }
+    Box3_          Offseted(T d) const                             { return { lo + d, hi + d }; }
+    Box3_          Offseted(T dx, T dy, T dz) const                { return { lo.x + dx, lo.y + dy, lo.z + dz, hi.x + dx, hi.y + dy, hi.z + dz }; }
+    Box3_          Offseted(const Point3_<T>& p) const             { return { lo + p, hi + p }; }
+    
+    void           InflateX(T dx)                                  { lo.x -= dx; hi.x += dx; }
+    void           InflateY(T dy)                                  { lo.y -= dy; hi.y += dy; }
+    void           InflateZ(T dz)                                  { lo.z -= dz; hi.z += dz; }
+    void           Inflate(T d)                                    { lo -= d; hi += d; }
+    void           Inflate(T dx, T dy, T dz)                       { lo.Offset(-dx, -dy, -dz); hi.Offset(dx, dy, dz); }
+    void           Inflate(const Point3_<T>& p)                    { lo -= p; hi += p; }
+
+    Box3_          InflatedX(T dx) const                           { return { lo.x - dx, lo.y, lo.z, hi.x + dx, hi.y, hi.z }; }
+    Box3_          InflatedY(T dy) const                           { return { lo.x, lo.y - dy, lo.z, hi.x, hi.y + dy, hi.z }; }
+    Box3_          InflatedZ(T dz) const                           { return { lo.x, lo.y, lo.z - dz, hi.x, hi.y, hi.z + dz }; }
+    Box3_          Inflated(T d) const                             { return { lo - d,  hi + d }; }
+    Box3_          Inflated(T dx, T dy, T dz) const                { return { lo - Point3_<T>(dx, dy, dz), hi + Point3_<T>( dx, dy, dz) };  }
+    Box3_          Inflated(const Point3_<T>& p) const             { return { lo - p, hi + p }; }
+
+    void           DeflateX(T dx)                                  { lo.x += dx; hi.x -= dx; }
+    void           DeflateY(T dy)                                  { lo.y += dy; hi.y -= dy; }
+    void           DeflateZ(T dz)                                  { lo.z += dz; hi.z -= dz; }
+    void           Deflate(T d)                                    { lo += d; hi -= d; }
+    void           Deflate(T dx, T dy, T dz)                       { lo.Offset(dx, dy, dz); hi.Offset(-dx, -dy, -dz); }
+    void           Deflate(const Point3_<T>& p)                    { lo += p; hi -= p; }
+
+    Box3_          DeflatedX(T dx) const                           { return { lo.x + dx, lo.y, lo.z, hi.x - dx, hi.y, hi.z }; }
+    Box3_          DeflatedY(T dy) const                           { return { lo.x, lo.y + dy, lo.z, hi.x, hi.y - dy, hi.z }; }
+    Box3_          DeflatedZ(T dz) const                           { return { lo.x, lo.y, lo.z + dz, hi.x, hi.y, hi.z - dz }; }
+    Box3_          Deflated(T d) const                             { return { lo + d,  hi - d }; }
+    Box3_          Deflated(T dx, T dy, T dz) const                { return { lo + Point3_<T>(dx, dy, dz), hi - Point3_<T>( dx, dy, dz) };  }
+    Box3_          Deflated(const Point3_<T>& p) const             { return { lo + p, hi - p }; }
+    
+    void           Expand(const Point3_<T>& p)                     { lo = min(lo, p); hi = max(hi, p); }
+    void           Expand(const Box3_& box)                        { Expand(box.lo); Expand(box.hi);   }
+    
+    Box3_          Expanded(const Point3_<T>& p) const             { Box3_ b(lo, hi); b.Expand(p); return b;   }
+    Box3_          Expanded(const Box3_& box) const                { Box3_ b(lo, hi); b.Expand(box); return b; }
+
+    bool           Contains(const Point3_<T>& p) const             { return p.x >= lo.x && p.x <= hi.x && p.y >= lo.y && p.y <= hi.y && p.z >= lo.z && p.z <= hi.z; }
+    bool           Contains(const Box3_& box) const                { return Contains(box.lo) && Contains(box.hi); }
+
+    bool           Intersects(const Box3_& box) const              { return !(box.hi.x < lo.x || box.lo.x > hi.x || box.hi.y < lo.y || box.lo.y > hi.y || box.hi.z < lo.z || box.lo.z > hi.z); }
+    
+    Box3_          Intersection(const Box3_& box) const            { return Intersects(box) ? Box3_(max(lo, box.lo), min (hi, box.hi)) : Null; }
+
+    Box3_          Clamped(const Box3_& box) const                 { return { max(lo, box.lo), min(hi, box.hi) }; }
+    
+    Tuple<Point3_<T>, T>  EnclosingCircle() const                  { return MakeTuple(Center(), Diagonal() * T(0.5)); }
+    
+    Point3_<T>     ClosestPointTo(const Point3_<T>& p) const       { return max(lo, min(hi, p)); }
+    
+    Vector<Point3_<T>> GetCorners() const;
+
+    Box3_&         operator=(const Box3_<T>& box)                  { lo = box.lo; hi = box.hi; return *this;  }
+
+    Box3_&         operator+=(const Box3_& box)                    { lo += box.lo; hi += box.hi; return *this; }
+    Box3_&         operator+=(T t)                                 { lo += t; hi += t; return *this; }
+    Box3_&         operator-=(const Box3_& box)                    { lo -= box.lo ;  hi -= box.hi; return *this; }
+    Box3_&         operator-=(T t)                                 { lo -= t; hi -= t; return *this; }
+    Box3_&         operator*=(const Box3_& box)                    { lo *= box.lo;  hi *= box.hi; return *this; }
+    Box3_&         operator*=(T t)                                 { lo *= t;  hi *= t; return *this; }
+    Box3_&         operator/=(const Box3_& box)                    { lo /= box.lo;  hi /= box.hi; return *this; }
+    Box3_&         operator/=(T t)                                 { lo /= t; hi /= t; return *this; }
+
+    Box3_&         operator++()                                    { ++lo; ++hi; return *this; }
+    Box3_&         operator--()                                    { --lo; --hi; return *this; }
+
+    friend Box3_   operator+(const Box3_& box)                       { return box; }
+    friend Box3_   operator-(const Box3_& box)                       { return Box3_(-box.lo, -box.hi); }
+
+    friend Box3_   operator+(const Box3_& a, const Box3_& b)         { return Box3_(a.lo + b.lo, a.hi + b.hi); }
+    friend Box3_   operator+(const Box3_& a, T t)                    { return Box3_(a.lo + t, a.hi + t); }
+    friend Box3_   operator-(const Box3_& a, const Box3_& b)         { return Box3_(a.lo - b.lo, a.hi - b.hi); }
+    friend Box3_   operator-(const Box3_& a, T t)                    { return Box3_(a.lo - t, a.hi - t); }
+    friend Box3_   operator*(const Box3_& a, const Box3_& b)         { return Box3_(a.lo * b.lo, a.hi * b.hi); }
+    friend Box3_   operator*(const Box3_& a, T t)                    { return Box3_(a.lo * t, a.hi * t); }
+    friend Box3_   operator/(const Box3_& a, const Box3_& b)         { return Box3_(a.lo / b.lo, a.hi / b.hi); }
+    friend Box3_   operator/(const Box3_& a, T t)                    { return Box3_(a.lo / t, a.hi / t); }
+
+    friend bool    operator==(const Box3_& a, const Box3_& b)      { return a.lo == b.lo && a.hi == b.hi; }
+    friend bool    operator!=(const Box3_& a, const Box3_& b)      { return !(a == b); }
+
+    friend Box3_   min(const Box3_& a, const Box3_& b)             { return Box3_(min(a.lo, b.lo), min(a.hi, b.hi)); }
+    friend Box3_   max(const Box3_& a, const Box3_& b)             { return Box3_(max(a.lo, b.lo), max(a.hi, b.hi)); }
+    
+    friend Box3_   Nvl(const Box3_& a, const Box3_& b)             { return IsNull(a) ? b : a; }
+
+    hash_t         GetHashValue() const                            { return CombineHash(lo, hi); }
+
+    String         ToString() const                                { return Format("[lo: %s, hi: %s]", lo, hi); }
+
+    operator       Value() const                                   { return FitsSvoValue<Box3_>() ? SvoToValue(*this) : RichToValue(*this); }
+    Box3_(const  Value& src)                                       { *this = src.Get<Box3_>(); }
+
+    operator       Ref() const                                     { return AsRef(*this); }
+
+    void           Serialize(Stream& s)                            { s % lo % hi; }
+    void           Jsonize(JsonIO& jio)                            { jio("lo_x", lo.x)("lo_y", lo.y)("lo_z", lo.z)("hi_x", hi.x)("hi_y", hi.y)("hi_z", hi.z); }
+    void           Xmlize(XmlIO& xio)                              { xio.Attr("lo_x", lo.x).Attr("lo_y", lo.y).Attr("lo_z", lo.z).Attr("hi_x", hi.x).Attr("hi_y", hi.y).Attr("hi_z", hi.z); }
+
+    int            Compare(const Box3_&) const                     { NEVER(); return 0; }
+    int            PolyCompare(const Value&) const                 { NEVER(); return 0; }
+
+};
+
+template<typename T>
+Vector<Point3_<T>> Box3_<T>::GetCorners() const
+{
+    Vector<Point3_<T>> v;
+    v.Reserve(8);
+    
+    v << Point3_<T>(lo.x, lo.y, lo.z)
+      << Point3_<T>(hi.x, lo.y, lo.z)
+      << Point3_<T>(lo.x, hi.y, lo.z)
+      << Point3_<T>(hi.x, hi.y, lo.z)
+      << Point3_<T>(lo.x, lo.y, hi.z)
+      << Point3_<T>(hi.x, lo.y, hi.z)
+      << Point3_<T>(lo.x, hi.y, hi.z)
+      << Point3_<T>(hi.x, hi.y, hi.z);
+      
+    return v;
+}
+
+template<typename T> // Fuzzy comparison
+bool IsEpsqual(const Box3_<T>& b1, const Box3_<T>& b2, T epsilon = std::numeric_limits<T>::epsilon())
+{
+    return IsEpsqual(b1.lo, b2.lo, epsilon) && IsEpsqual(b1.hi, b2.hi, epsilon);
+}
+
+using Box3D = Box3_<float>;
 
 template<typename T>
 struct Matrix4_ : Moveable<Matrix4_<T>> {
@@ -444,6 +610,7 @@ struct Matrix4_ : Moveable<Matrix4_<T>> {
     bool               IsIdentity() const;
     bool               IsZero() const                                          { return x.IsZero() && y.IsZero() && z.IsZero() && w.IsZero(); }
     bool               IsNullInstance() const                                  { return IsNull(w); }
+    bool               IsAffine() const                                        { return w.w == 1 && w.x == 0 && w.y == 0 && w.z == 0; }
 
     static Matrix4_    Translation(const Point3_<T>& p);
     static Matrix4_    Translation(T x, T y, T z);
@@ -453,11 +620,15 @@ struct Matrix4_ : Moveable<Matrix4_<T>> {
     static Matrix4_    RotationX(T angle);
     static Matrix4_    RotationY(T angle);
     static Matrix4_    RotationZ(T angle);
+    static Matrix4_    Rotation(const Point3_<T>& angles);
+    static Matrix4_    Rotation(T anglex, T angley, T anglez);
     static Matrix4_    Rotation(const Point3_<T>& axis, T angle);
     static Matrix4_    Rotation(T ax, T ay, T az, T angle);
     static Matrix4_    Perspective(T fov, T aspectratio, T fnear, T ffar);
     static Matrix4_    Frustum(const Rect_<T>& view, T fnear, T ffar);
-    static Matrix4_    Ortographic(const Rect_<T>& view, T fnear, T ffar);
+    static Matrix4_    Orthographic(const Rect_<T>& view, T fnear, T ffar);
+    static Matrix4_    Isometric(Rect_<T> r, T fnear, T ffar);
+    static Matrix4_    Isometric(T zoom, T aspectratio, T fnear, T ffar);
     static Matrix4_    LookAt(const Point3_<T>& eye, const Point3_<T>& center, const Point3_<T>& up);
 
     T                  Determinant() const;
@@ -476,105 +647,6 @@ struct Matrix4_ : Moveable<Matrix4_<T>> {
     String             ToString() const                                        { String s; s << "rx: " << x << '\n' << "ry: " << y << '\n' << "rz: " << z << '\n' << "rw: " << w; return s; }
     
 };
-
-template<typename T>
-Matrix4_<T> operator*(const Matrix4_<T>& m1, const Matrix4_<T>& m2)
-{
-    Matrix4_<T> m;
-    m.x.x = m1.x.x * m2.x.x + m1.x.y * m2.y.x + m1.x.z * m2.z.x + m1.x.w * m2.w.x;
-    m.x.y = m1.x.x * m2.x.y + m1.x.y * m2.y.y + m1.x.z * m2.z.y + m1.x.w * m2.w.y;
-    m.x.z = m1.x.x * m2.x.z + m1.x.y * m2.y.z + m1.x.z * m2.z.z + m1.x.w * m2.w.z;
-    m.x.w = m1.x.x * m2.x.w + m1.x.y * m2.y.w + m1.x.z * m2.z.w + m1.x.w * m2.w.w;
-
-    m.y.x = m1.y.x * m2.x.x + m1.y.y * m2.y.x + m1.y.z * m2.z.x + m1.y.w * m2.w.x;
-    m.y.y = m1.y.x * m2.x.y + m1.y.y * m2.y.y + m1.y.z * m2.z.y + m1.y.w * m2.w.y;
-    m.y.z = m1.y.x * m2.x.z + m1.y.y * m2.y.z + m1.y.z * m2.z.z + m1.y.w * m2.w.z;
-    m.y.w = m1.y.x * m2.x.w + m1.y.y * m2.y.w + m1.y.z * m2.z.w + m1.y.w * m2.w.w;
-
-    m.z.x = m1.z.x * m2.x.x + m1.z.y * m2.y.x + m1.z.z * m2.z.x + m1.z.w * m2.w.x;
-    m.z.y = m1.z.x * m2.x.y + m1.z.y * m2.y.y + m1.z.z * m2.z.y + m1.z.w * m2.w.y;
-    m.z.z = m1.z.x * m2.x.z + m1.z.y * m2.y.z + m1.z.z * m2.z.z + m1.z.w * m2.w.z;
-    m.z.w = m1.z.x * m2.x.w + m1.z.y * m2.y.w + m1.z.z * m2.z.w + m1.z.w * m2.w.w;
-
-    m.w.x = m1.w.x * m2.x.x + m1.w.y * m2.y.x + m1.w.z * m2.z.x + m1.w.w * m2.w.x;
-    m.w.y = m1.w.x * m2.x.y + m1.w.y * m2.y.y + m1.w.z * m2.z.y + m1.w.w * m2.w.y;
-    m.w.z = m1.w.x * m2.x.z + m1.w.y * m2.y.z + m1.w.z * m2.z.z + m1.w.w * m2.w.z;
-    m.w.w = m1.w.x * m2.x.w + m1.w.y * m2.y.w + m1.w.z * m2.z.w + m1.w.w * m2.w.w;
-    return m;
-}
-
-template<typename T>
-Matrix4_<T>& operator*=(Matrix4_<T>& m1, const Matrix4_<T>& m2)
-{
-    return m1 = m1 * m2;
-}
-
-template<typename T>
-Matrix4_<T> operator/(const Matrix4_<T>& m1, const Matrix4_<T>& m2)
-{
-    return m1 * m2.Inverse();
-}
-
-template<typename T>
-Matrix4_<T>& operator/=(Matrix4_<T>& m1, const Matrix4_<T>& m2)
-{
-    return m1 = m1 / m2;
-}
-
-template<typename T>
-Point4_<T> operator*(const Point4_<T>& p, const Matrix4_<T>& m)
-{
-    return Point4_<T>(m.CX() ^ p, m.CY() ^ p, m.CZ() ^ p, m.CW() ^ p);
-}
-
-template<typename T>
-Matrix4_<T> operator*=(Point4_<T>& p, const Matrix4_<T>& m)
-{
-    return p = p * m;
-}
-
-template<typename T>
-Point3_<T> operator*(const Point3_<T>& p, const Matrix4_<T>& m)
-{
-    return Point4_<T>(
-        p.x * m.x.x + p.y * m.y.x + p.z * m.z.x + m.w.x,
-        p.x * m.x.y + p.y * m.y.y + p.z * m.z.y + m.w.y,
-        p.x * m.x.z + p.y * m.y.z + p.z * m.z.z + m.w.z,
-        p.x * m.x.w + p.y * m.y.w + p.z * m.z.w + m.w.w).ToPoint3DAffine();
-}
-
-template<typename T>
-Matrix4_<T> operator*=(Point3_<T>& p, const Matrix4_<T>& m)
-{
-    return p = p * m;
-}
-
-template<typename T>
-Point_<T> operator*(const Point_<T>& p, const Matrix4_<T>& m)
-{
-    return Point3_<T>(
-        p.x * m.x.x + p.y * m.y.x + m.w.x,
-        p.x * m.x.y + p.y * m.y.y + m.w.y,
-        p.x * m.x.w + p.y * m.y.w + m.w.w).ToPointfAffine();
-}
-
-template<typename T>
-Matrix4_<T> operator*=(Point_<T>& p, const Matrix4_<T>& m)
-{
-    return p = p * m;
-}
-
-template<typename T>
-bool operator==(const Matrix4_<T>& m1, const Matrix4_<T>& m2)
-{
-    return m1.x == m2.x && m1.y == m2.y && m1.z == m2.z && m1.w == m2.w; // Useful in many cases. See IsEpsqual for fuzzy comparison
-}
-
-template<typename T>
-bool operator!=(const Matrix4_<T>& m1, const Matrix4_<T>& m2)
-{
-    return !(m1 == m2);
-}
 
 template<typename T>
 bool Matrix4_<T>::IsIdentity() const
@@ -639,6 +711,18 @@ Matrix4_<T> Matrix4_<T>::RotationZ(T angle)
 }
 
 template<typename T>
+Matrix4_<T> Matrix4_<T>::Rotation(const Point3_<T>& angles)
+{
+	return RotationX(angles.x) * RotationY(angles.y) * RotationZ(angles.z);
+}
+
+template<typename T>
+Matrix4_<T> Matrix4_<T>::Rotation(T anglex, T angley, T anglez)
+{
+	return RotationX(anglex) * RotationY(angley) * RotationZ(anglez);
+}
+
+template<typename T>
 Matrix4_<T> Matrix4_<T>::Rotation(const Point3_<T>& axis, T angle)
 {
     Point3_<T> ax = axis.Normalized();
@@ -665,15 +749,15 @@ Matrix4_<T> Matrix4_<T>::Perspective(T fov, T aspectratio, T fnear, T ffar)
     if(aspectratio == 0 || fnear <= 0 || fnear == ffar)
         return Identity();
     
-    T f = static_cast<T>(1.0) / tan((fov * static_cast<T>(0.5)) * M_PI / 180.0);
+    T f = static_cast<T>(1.0) / tan(fov * static_cast<T>(0.5));
     T depth = ffar - fnear;
 
     Matrix4_<T> m = Zero();
     m.x.x = f / aspectratio;
     m.y.y = f;
-    m.z.z = -(ffar + fnear) / depth;
-    m.z.w = -1.0;
-    m.w.z = -(2.0 * fnear * ffar) / depth;
+    m.z.z = ffar / depth;
+    m.z.w = 1.0;
+    m.w.z = -fnear * ffar / depth;
 
     return m;
 }
@@ -694,15 +778,15 @@ Matrix4_<T> Matrix4_<T>::Frustum(const Rect_<T>& view, T fnear, T ffar)
     m.y.y = (2.0 * fnear) / h;
     m.z.x = (view.left + view.right) / w;
     m.z.y = (view.top + view.bottom) / h;
-    m.z.z = -(ffar + fnear) / clip;
-    m.z.w = -1.0;
-    m.w.z = -(2.0 * fnear * ffar) / clip;
+    m.z.z = ffar / clip;
+    m.z.w = 1.0;
+    m.w.z = -fnear * ffar / clip;
 
     return m;
 }
 
 template<typename T>
-Matrix4_<T> Matrix4_<T>::Ortographic(const Rect_<T>& view, T fnear, T ffar)
+Matrix4_<T> Matrix4_<T>::Orthographic(const Rect_<T>& view, T fnear, T ffar)
 {
     if(view.IsEmpty() || fnear == ffar)
         return Null;
@@ -717,36 +801,51 @@ Matrix4_<T> Matrix4_<T>::Ortographic(const Rect_<T>& view, T fnear, T ffar)
     m.w.x = -(view.left + view.right) / w;
     m.y.y = 2.0 / h;
     m.w.y = -(view.top + view.bottom) / h;
-    m.z.z = -2.0 / clip;
+    m.z.z = 2.0 / clip;
     m.w.z = -(ffar + fnear) / clip;
 
     return m;
 }
 
 template<typename T>
+Matrix4_<T> Matrix4_<T>::Isometric(Rect_<T> r, T fnear, T ffar)
+{
+    Matrix4_ m = Orthographic(r, fnear, ffar);
+    return !m.IsNullInstance()
+          ? m * (RotationY(-T(45.0)  *  T(M_PI / 180.0)) * RotationX(T(35.264) *  T(M_PI / 180.0))) : Null;
+}
+
+template <typename T>
+Matrix4_<T> Matrix4_<T>::Isometric(T zoom, T aspectratio, T fnear, T ffar)
+{
+    T hcx = zoom;
+    T hcy = zoom / aspectratio;
+
+    return Isometric(Rect_<T>(-hcx, -hcy, hcx, hcy), fnear, ffar);
+}
+
+template<typename T>
 Matrix4_<T> Matrix4_<T>::LookAt(const Point3_<T>& eye, const Point3_<T>& center, const Point3_<T>& up)
 {
     Point3_<T> fwd    = (center - eye).Normalized();
-    Point3_<T> right  = CrossProduct(fwd, up).Normalized();
-    Point3_<T> new_up = CrossProduct(right, fwd);
+    Point3_<T> right  = CrossProduct(up, fwd).Normalized();
+    Point3_<T> new_up = CrossProduct(fwd, right);
 
     Matrix4_<T> m = Identity();
 
-    // Assign basis vectors (TRANSPOSED for row-major)
     m.x.x = right.x;
     m.x.y = right.y;
     m.x.z = right.z;
     m.y.x = new_up.x;
     m.y.y = new_up.y;
     m.y.z = new_up.z;
-    m.z.x = -fwd.x;
-    m.z.y = -fwd.y;
-    m.z.z = -fwd.z;
+    m.z.x = fwd.x;
+    m.z.y = fwd.y;
+    m.z.z = fwd.z;
 
-    // Translation
     m.w.x = -DotProduct(right, eye);
     m.w.y = -DotProduct(new_up, eye);
-    m.w.z = DotProduct(fwd, eye);
+    m.w.z = -DotProduct(fwd, eye);
 
     return m;
 }
@@ -829,22 +928,678 @@ Matrix4_<T> Matrix4_<T>::FastInverse() const
     return Matrix4_<T>(x.x, y.x, z.x, -x.w, x.y, y.y, z.y, -y.w, x.z, y.z, z.z, -z.w, 0, 0, 0, 1);
 }
 
+template<typename T>
+Matrix4_<T> operator*(const Matrix4_<T>& m1, const Matrix4_<T>& m2)
+{
+    Matrix4_<T> m;
+    m.x.x = m1.x.x * m2.x.x + m1.x.y * m2.y.x + m1.x.z * m2.z.x + m1.x.w * m2.w.x;
+    m.x.y = m1.x.x * m2.x.y + m1.x.y * m2.y.y + m1.x.z * m2.z.y + m1.x.w * m2.w.y;
+    m.x.z = m1.x.x * m2.x.z + m1.x.y * m2.y.z + m1.x.z * m2.z.z + m1.x.w * m2.w.z;
+    m.x.w = m1.x.x * m2.x.w + m1.x.y * m2.y.w + m1.x.z * m2.z.w + m1.x.w * m2.w.w;
+
+    m.y.x = m1.y.x * m2.x.x + m1.y.y * m2.y.x + m1.y.z * m2.z.x + m1.y.w * m2.w.x;
+    m.y.y = m1.y.x * m2.x.y + m1.y.y * m2.y.y + m1.y.z * m2.z.y + m1.y.w * m2.w.y;
+    m.y.z = m1.y.x * m2.x.z + m1.y.y * m2.y.z + m1.y.z * m2.z.z + m1.y.w * m2.w.z;
+    m.y.w = m1.y.x * m2.x.w + m1.y.y * m2.y.w + m1.y.z * m2.z.w + m1.y.w * m2.w.w;
+
+    m.z.x = m1.z.x * m2.x.x + m1.z.y * m2.y.x + m1.z.z * m2.z.x + m1.z.w * m2.w.x;
+    m.z.y = m1.z.x * m2.x.y + m1.z.y * m2.y.y + m1.z.z * m2.z.y + m1.z.w * m2.w.y;
+    m.z.z = m1.z.x * m2.x.z + m1.z.y * m2.y.z + m1.z.z * m2.z.z + m1.z.w * m2.w.z;
+    m.z.w = m1.z.x * m2.x.w + m1.z.y * m2.y.w + m1.z.z * m2.z.w + m1.z.w * m2.w.w;
+
+    m.w.x = m1.w.x * m2.x.x + m1.w.y * m2.y.x + m1.w.z * m2.z.x + m1.w.w * m2.w.x;
+    m.w.y = m1.w.x * m2.x.y + m1.w.y * m2.y.y + m1.w.z * m2.z.y + m1.w.w * m2.w.y;
+    m.w.z = m1.w.x * m2.x.z + m1.w.y * m2.y.z + m1.w.z * m2.z.z + m1.w.w * m2.w.z;
+    m.w.w = m1.w.x * m2.x.w + m1.w.y * m2.y.w + m1.w.z * m2.z.w + m1.w.w * m2.w.w;
+    return m;
+}
+
+template<typename T>
+Matrix4_<T>& operator*=(Matrix4_<T>& m1, const Matrix4_<T>& m2)
+{
+    return m1 = m1 * m2;
+}
+
+template<typename T>
+Matrix4_<T> operator/(const Matrix4_<T>& m1, const Matrix4_<T>& m2)
+{
+    return m1 * m2.Inverse();
+}
+
+template<typename T>
+Matrix4_<T>& operator/=(Matrix4_<T>& m1, const Matrix4_<T>& m2)
+{
+    return m1 = m1 / m2;
+}
+
+template<typename T>
+Point4_<T> operator*(const Point4_<T>& p, const Matrix4_<T>& m)
+{
+    return Point4_<T>(m.CX() ^ p, m.CY() ^ p, m.CZ() ^ p, m.CW() ^ p);
+}
+
+template<typename T>
+Matrix4_<T> operator*=(Point4_<T>& p, const Matrix4_<T>& m)
+{
+    return p = p * m;
+}
+
+template<typename T>
+Point3_<T> operator*(const Point3_<T>& p, const Matrix4_<T>& m)
+{
+    return Point4_<T>(
+        p.x * m.x.x + p.y * m.y.x + p.z * m.z.x + m.w.x,
+        p.x * m.x.y + p.y * m.y.y + p.z * m.z.y + m.w.y,
+        p.x * m.x.z + p.y * m.y.z + p.z * m.z.z + m.w.z,
+        p.x * m.x.w + p.y * m.y.w + p.z * m.z.w + m.w.w).ToPoint3DAffine();
+}
+
+
+template<typename T>
+Matrix4_<T> operator*=(Point3_<T>& p, const Matrix4_<T>& m)
+{
+    return p = p * m;
+}
+
+template<typename T>
+Point_<T> operator*(const Point_<T>& p, const Matrix4_<T>& m)
+{
+    return Point3_<T>(
+        p.x * m.x.x + p.y * m.y.x + m.w.x,
+        p.x * m.x.y + p.y * m.y.y + m.w.y,
+        p.x * m.x.w + p.y * m.y.w + m.w.w).ToPointfAffine();
+}
+
+template<typename T>
+Box3_<T> operator*(const Box3_<T>& box, const Matrix4_<T>& m)
+{
+    if(IsNull(box) || IsNull(m))
+        return Null;
+    Box3_<T> q;
+    for(const Point3_<T>& corner : box.GetCorners())
+        q.Expand(corner * m);
+    return q; // AAAB
+}
+
+template<typename T>
+Box3_<T> Transform(const Box3_<T>& box, const Matrix4_<T>& m)
+{
+    return box * m;
+}
+
+template<typename T>
+Box3_<T> operator^(const Box3_<T>& box, const Matrix4_<T>& m)
+{
+   if(IsNull(box) || IsNull(m))
+        return Null;
+
+    Point3_<T> center = box.Center();
+    Point3_<T> extent = box.Size() * T(0.5);
+    
+    Point3_<T> newcenter = center * m;
+    Point3_<T> newextent;
+
+    newextent.x = extent.x * abs(m.x.x) + extent.y * abs(m.y.x) + extent.z * abs(m.z.x);
+    newextent.y = extent.x * abs(m.x.y) + extent.y * abs(m.y.y) + extent.z * abs(m.z.y);
+    newextent.z = extent.x * abs(m.x.z) + extent.y * abs(m.y.z) + extent.z * abs(m.z.z);
+
+    return Box3_<T>(newcenter - newextent, newcenter + newextent);
+}
+
+template<typename T>
+Box3_<T> TransformAffine(const Box3_<T>& box, const Matrix4_<T>& m)
+{
+    return box ^ m;
+}
+
+template<typename T>
+Box3_<T> operator%(const Box3_<T>& box, const Matrix4_<T>& m)
+{
+    return m.IsAffine() ? TransformAffine(box, m) : Transform(box, m);
+}
+
+template<typename T>
+Box3_<T> OptimizedTransform(const Box3_<T>& box, const Matrix4_<T>& m)
+{
+    return box % m;
+}
+
+template<typename T>
+Matrix4_<T> operator*=(Point_<T>& p, const Matrix4_<T>& m)
+{
+    return p = p * m;
+}
+
+template<typename T>
+bool operator==(const Matrix4_<T>& m1, const Matrix4_<T>& m2)
+{
+    return m1.x == m2.x && m1.y == m2.y && m1.z == m2.z && m1.w == m2.w; // Useful in many cases. See IsEpsqual for fuzzy comparison
+}
+
+template<typename T>
+bool operator!=(const Matrix4_<T>& m1, const Matrix4_<T>& m2)
+{
+    return !(m1 == m2);
+}
+
 template<typename T> // Fuzzy comparison
 bool IsEpsqual(const Matrix4_<T>& m1, const Matrix4_<T>& m2, T epsilon = std::numeric_limits<T>::epsilon())
 {
-    static_assert(std::is_floating_point<T>::value, "IsEpsqual: T must be a floating-point type");
-
-    const auto Epsqual = [epsilon](T a, T b) {
-        return abs(a - b) <= epsilon * max(T(1), max(abs(a), abs(b)));
-    };
-
-    return Epsqual(m1.x.x, m2.x.x) && Epsqual(m1.x.y, m2.x.y) && Epsqual(m1.x.z, m2.x.z) && Epsqual(m1.x.w, m2.x.w)
-        && Epsqual(m1.y.x, m2.y.x) && Epsqual(m1.y.y, m2.y.y) && Epsqual(m1.y.z, m2.y.z) && Epsqual(m1.y.w, m2.y.w)
-        && Epsqual(m1.z.x, m2.z.x) && Epsqual(m1.z.y, m2.z.y) && Epsqual(m1.z.z, m2.z.z) && Epsqual(m1.z.w, m2.z.w)
-        && Epsqual(m1.w.x, m2.w.x) && Epsqual(m1.w.y, m2.w.y) && Epsqual(m1.w.z, m2.w.z) && Epsqual(m1.w.w, m2.w.w);
+    return IsEpsqual(m1.x, m2.x, epsilon) && IsEpsqual(m1.y, m2.y, epsilon)
+        && IsEpsqual(m1.z, m2.z, epsilon) && IsEpsqual(m1.w, m2.w, epsilon);
 }
 
-using Matrix4D  = Matrix4_<double>;
+using Matrix4D  = Matrix4_<float>;
 
+// Added for OpenGL (column-major) compatibility
+template<typename T>
+struct Matrix4GL_ : Moveable<Matrix4GL_<T>> {
+    Point4_<T> x, y, z, w;
+
+    Matrix4GL_() {}
+    Matrix4GL_(Point4_<T> x, Point4_<T> y, Point4_<T> z, Point4_<T> w) : x(x), y(y), z(z), w(w) {}
+    Matrix4GL_(T xx, T xy, T xz, T xw, T yx, T yy, T yz, T yw,
+               T zx, T zy, T zz, T zw, T wx = 0, T wy = 0, T wz = 0, T ww = 0)
+                 : x(xx, xy, xz, xw)
+                 , y(yx, yy, yz, yw)
+                 , z(zx, zy, zz, zw)
+                 , w(wx, wy, wz, ww)                                           {}
+             
+    Matrix4GL_(const Nuller&)                                                  { SetNull(); }
+
+    static Matrix4GL_    Zero()                                                { return Matrix4GL_(); }
+    static Matrix4GL_    Identity()                                            { return Matrix4GL_( 1, 0, 0 ,0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1); }
+    static Matrix4GL_    MirrorX()                                             { return Matrix4GL_(-1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1); }
+    static Matrix4GL_    MirrorY()                                             { return Matrix4GL_( 1, 0, 0, 0, 0,-1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1); }
+    static Matrix4GL_    MirrorZ()                                             { return Matrix4GL_( 1, 0, 0, 0, 0, 1, 0, 0, 0, 0,-1, 0, 0, 0, 0, 1); }
+
+    void                SetNull()                                              { x.SetNull(); y.SetNull(); z.SetNull(); w.SetNull(); }
+
+    bool                IsIdentity() const;
+    bool                IsZero() const                                         { return x.IsZero() && y.IsZero() && z.IsZero() && w.IsZero(); }
+    bool                IsNullInstance() const                                 { return IsNull(w); }
+    bool                IsAffine() const                                       { return w.w == 1 && x.w == 0 && y.w == 0 && z.w == 0; }
+
+    static Matrix4GL_    Translation(const Point3_<T>& p);
+    static Matrix4GL_    Translation(T x, T y, T z);
+    static Matrix4GL_    Scale(const Point3_<T>& scale);
+    static Matrix4GL_    Scale(T sx, T sy, T sz);
+    static Matrix4GL_    Scale(T scale);
+    static Matrix4GL_    RotationX(T angle);
+    static Matrix4GL_    RotationY(T angle);
+    static Matrix4GL_    RotationZ(T angle);
+    static Matrix4GL_    Rotation(const Point3_<T>& angles);
+    static Matrix4GL_    Rotation(T anglex, T angley, T anglez);
+    static Matrix4GL_    Rotation(const Point3_<T>& axis, T angle);
+    static Matrix4GL_    Rotation(T ax, T ay, T az, T angle);
+    static Matrix4GL_    Perspective(T fov, T aspectratio, T fnear, T ffar);
+    static Matrix4GL_    Frustum(const Rect_<T>& view, T fnear, T ffar);
+    static Matrix4GL_    Orthographic(const Rect_<T>& view, T fnear, T ffar);
+    static Matrix4GL_    Isometric(Rect_<T> r, T fnear, T ffar);
+    static Matrix4GL_    Isometric(T zoom, T aspectratio, T fnear, T ffar);
+    static Matrix4GL_    LookAt(const Point3_<T>& eye, const Point3_<T>& center, const Point3_<T>& up);
+
+    T                    Determinant() const;
+    Matrix4GL_           Inverse() const;
+    Matrix4GL_           FastInverse() const;
+
+    Point4_<T>           CX() const                                            { return Point4_<T>(x.x, y.x, z.x, w.x); }
+    Point4_<T>           CY() const                                            { return Point4_<T>(x.y, y.y, z.y, w.y); }
+    Point4_<T>           CZ() const                                            { return Point4_<T>(x.z, y.z, z.z, w.z); }
+    Point4_<T>           CW() const                                            { return Point4_<T>(x.w, y.w, z.w, w.w); }
+
+    void                Serialize(Stream& s)                                   { s % x % y % z % w; }
+    void                Jsonize(JsonIO& jio)                                   { jio("rx", x)("ry", y)("rz", z)("rw", w); }
+    void                Xmlize(XmlIO& xio)                                     { xio.Attr("rx", x).Attr("ry", y).Attr("rz", z).Attr("rw", w); }
+    
+    String              ToString() const                                       { String s; s << "rx: " << x << '\n' << "ry: " << y << '\n' << "rz: " << z << '\n' << "rw: " << w; return s; }
+    
+};
+
+template<typename T>
+bool Matrix4GL_<T>::IsIdentity() const
+{
+    return x.x == 1 && y.y == 1 && z.z == 1 && w.w == 1
+        && x.y == 0 && x.z == 0 && x.w == 0 && y.x == 0
+        && y.z == 0 && y.w == 0 && z.x == 0 && z.y == 0
+        && z.w == 0 && w.x == 0 && w.y == 0 && w.z == 0;
+}
+
+template<typename T>
+Matrix4GL_<T> Matrix4GL_<T>::Translation(const Point3_<T>& p)
+{
+    return Matrix4GL_<T>(1, 0, 0, 0,  0, 1, 0, 0, 0, 0, 1, 0, p.x, p.y, p.z, 1);
+}
+
+template<typename T>
+Matrix4GL_<T> Matrix4GL_<T>::Translation(T x, T y, T z)
+{
+    return Translation(Point3_<T>(x, y, z));
+}
+template<typename T>
+Matrix4GL_<T> Matrix4GL_<T>::Scale(const Point3_<T>& scale)
+{
+    return Matrix4GL_<T>(scale.x, 0, 0, 0, 0, scale.y, 0, 0, 0, 0, scale.z, 0, 0, 0, 0, 1);
+}
+
+template<typename T>
+Matrix4GL_<T> Matrix4GL_<T>::Scale(T sx, T sy, T sz)
+{
+    return Matrix4GL_<T>(sx, 0, 0, 0, 0, sy, 0, 0, 0, 0, sz, 0, 0, 0, 0, 1);
+}
+
+template<typename T>
+Matrix4GL_<T> Matrix4GL_<T>::Scale(T scale)
+{
+    return Matrix4GL_<T>(scale, 0, 0, 0, 0, scale, 0, 0, 0, 0, scale, 0, 0, 0, 0, 1);
+}
+
+template<typename T>
+Matrix4GL_<T> Matrix4GL_<T>::RotationX(T angle)
+{
+    T c = cos(angle);
+    T s = sin(angle);
+    return Matrix4GL_<T>(1, 0, 0, 0, 0, c, s, 0, 0, -s, c, 0, 0, 0, 0, 1);
+}
+
+template<typename T>
+Matrix4GL_<T> Matrix4GL_<T>::RotationY(T angle)
+{
+    T c = cos(angle);
+    T s = sin(angle);
+    return Matrix4GL_<T>(c, 0, -s, 0, 0, 1, 0, 0, s, 0, c, 0, 0, 0, 0, 1);
+}
+
+template<typename T>
+Matrix4GL_<T> Matrix4GL_<T>::RotationZ(T angle)
+{
+    T c = cos(angle);
+    T s = sin(angle);
+    return Matrix4GL_<T>(c, s, 0, 0, -s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+}
+
+template<typename T>
+Matrix4GL_<T> Matrix4GL_<T>::Rotation(const Point3_<T>& angles)
+{
+    return RotationX(angles.x) * RotationY(angles.y) * RotationZ(angles.z);
+}
+
+template<typename T>
+Matrix4GL_<T> Matrix4GL_<T>::Rotation(T anglex, T angley, T anglez)
+{
+    return RotationX(anglex) * RotationY(angley) * RotationZ(anglez);
+}
+
+template<typename T>
+Matrix4GL_<T> Matrix4GL_<T>::Rotation(const Point3_<T>& axis, T angle)
+{
+    Point3_<T> ax = axis.Normalized();
+    T c = cos(angle);
+    T s = sin(angle);
+    T t = 1.0 - c;
+    T x = ax.x, y = ax.y, z = ax.z;
+    return Matrix4GL_<T>(
+        t * x * x + c, t * x * y + s * z, t * x * z - s * y, 0,
+        t * x * y - s * z, t * y * y + c, t * y * z + s * x, 0,
+        t * x * z + s * y, t * y * z - s * x, t * z * z + c, 0,
+        0, 0, 0, 1);
+}
+
+template<typename T>
+Matrix4GL_<T> Matrix4GL_<T>::Rotation(T ax, T ay, T az, T angle)
+{
+    return Rotation(Point3_<T>(ax, ay, az), angle);
+}
+
+template<typename T>
+Matrix4GL_<T> Matrix4GL_<T>::Perspective(T fov, T aspectratio, T fnear, T ffar)
+{
+    if(aspectratio == 0 || fnear <= 0 || fnear == ffar)
+        return Identity();
+    
+    T f = static_cast<T>(1.0) / tan(fov * static_cast<T>(0.5));
+    T depth = ffar - fnear;
+
+    Matrix4GL_<T> m = Zero();
+    m.x.x = f / aspectratio;
+    m.y.y = f;
+    m.z.z = -(ffar + fnear) / depth;
+    m.z.w = -1.0;
+    m.w.z = -(2.0 * ffar * fnear) / depth;
+
+    return m;
+}
+
+template<typename T>
+Matrix4GL_<T> Matrix4GL_<T>::Frustum(const Rect_<T>& view, T fnear, T ffar)
+{
+    if(view.IsEmpty() || fnear <= 0 || ffar <= 0 || fnear == ffar)
+        return Null;
+    
+    T w = view.Width();
+    T h = view.Height();
+    T clip = ffar - fnear;
+
+    Matrix4GL_<T> m = Zero();
+
+    m.x.x = (2.0 * fnear) / w;
+    m.y.y = (2.0 * fnear) / h;
+    m.z.x = (view.left + view.right) / w;
+    m.z.y = (view.top + view.bottom) / h;
+    m.z.z = -(ffar + fnear) / clip;
+    m.z.w = -1.0;
+    m.w.z = -(2.0 * ffar * fnear) / clip;
+
+    return m;
+}
+
+template<typename T>
+Matrix4GL_<T> Matrix4GL_<T>::Orthographic(const Rect_<T>& view, T fnear, T ffar)
+{
+    if(view.IsEmpty() || fnear == ffar)
+        return Null;
+
+    T w = view.Width();
+    T h = view.Height();
+    T clip = ffar - fnear;
+
+    Matrix4GL_<T> m = Identity();
+
+    m.x.x = 2.0 / w;
+    m.w.x = -(view.left + view.right) / w;
+    m.y.y = 2.0 / h;
+    m.w.y = -(view.top + view.bottom) / h;
+    m.z.z = -2.0 / clip;
+    m.w.z = -(ffar + fnear) / clip;
+
+    return m;
+}
+
+template<typename T>
+Matrix4GL_<T> Matrix4GL_<T>::Isometric(Rect_<T> r, T fnear, T ffar)
+{
+    Matrix4GL_ m = Orthographic(r, fnear, ffar);
+    return !m.IsNullInstance()
+          ? m * (RotationY(-T(45.0)  *  T(M_PI / 180.0)) * RotationX(T(35.264) *  T(M_PI / 180.0))) : Null;
+}
+
+template <typename T>
+Matrix4GL_<T> Matrix4GL_<T>::Isometric(T zoom, T aspectratio, T fnear, T ffar)
+{
+    T hcx = zoom;
+    T hcy = zoom / aspectratio;
+
+    return Isometric(Rect_<T>(-hcx, -hcy, hcx, hcy), fnear, ffar);
+}
+
+template<typename T>
+Matrix4GL_<T> Matrix4GL_<T>::LookAt(const Point3_<T>& eye, const Point3_<T>& center, const Point3_<T>& up)
+{
+    Point3_<T> fwd    = (center - eye).Normalized();
+    Point3_<T> right  = CrossProduct(up, fwd).Normalized();
+    Point3_<T> new_up = CrossProduct(fwd, right);
+
+    Matrix4GL_<T> m = Identity();
+
+    m.x.x = right.x;
+    m.x.y = new_up.x;
+    m.x.z = -fwd.x;
+    m.y.x = right.y;
+    m.y.y = new_up.y;
+    m.y.z = -fwd.y;
+    m.z.x = right.z;
+    m.z.y = new_up.z;
+    m.z.z = -fwd.z;
+
+    m.w.x = -DotProduct(right, eye);
+    m.w.y = -DotProduct(new_up, eye);
+    m.w.z = DotProduct(fwd, eye);
+
+    return m;
+}
+
+template<typename T>
+T Matrix4GL_<T>::Determinant() const
+{
+    // Cache
+    T A = z.z * w.w - z.w * w.z;
+    T B = z.y * w.w - z.w * w.y;
+    T C = z.y * w.z - z.z * w.y;
+    T D = z.x * w.w - z.w * w.x;
+    T E = z.x * w.z - z.z * w.x;
+    T F = z.x * w.y - z.y * w.x;
+
+    // Laplace expansion along the first row (x)
+    return x.x * (y.y * A - y.z * B + y.w * C)
+         - x.y * (y.x * A - y.z * D + y.w * E)
+         + x.z * (y.x * B - y.y * D + y.w * F)
+         - x.w * (y.x * C - y.y * E + y.z * F);
+}
+
+template<typename T>
+Matrix4GL_<T> Matrix4GL_<T>::Inverse() const
+{
+    T d = Determinant();
+    if(abs(d) < std::numeric_limits<T>::epsilon())
+        return Null;
+    d = 1 / d;
+
+    // Compute cofactors using 2x2 determinants (cache)
+    T A2323 = z.z * w.w - z.w * w.z;
+    T A1323 = z.y * w.w - z.w * w.y;
+    T A1223 = z.y * w.z - z.z * w.y;
+    T A0323 = z.x * w.w - z.w * w.x;
+    T A0223 = z.x * w.z - z.z * w.x;
+    T A0123 = z.x * w.y - z.y * w.x;
+
+    T A2313 = y.z * w.w - y.w * w.z;
+    T A1313 = y.y * w.w - y.w * w.y;
+    T A1213 = y.y * w.z - y.z * w.y;
+    T A0313 = y.x * w.w - y.w * w.x;
+    T A0213 = y.x * w.z - y.z * w.x;
+    T A0113 = y.x * w.y - y.y * w.x;
+
+    T A2303 = y.z * z.w - y.w * z.z;
+    T A1303 = y.y * z.w - y.w * z.y;
+    T A1203 = y.y * z.z - y.z * z.y;
+    T A0303 = y.x * z.w - y.w * z.x;
+    T A0203 = y.x * z.z - y.z * z.x;
+    T A0103 = y.x * z.y - y.y * z.x;
+
+    Matrix4GL_<T> m;
+    m.x.x =  (y.y * A2323 - y.z * A1323 + y.w * A1223) * d;
+    m.x.y = -(x.y * A2323 - x.z * A1323 + x.w * A1223) * d;
+    m.x.z =  (x.y * A2313 - x.z * A1313 + x.w * A1213) * d;
+    m.x.w = -(x.y * A2303 - x.z * A1303 + x.w * A1203) * d;
+
+    m.y.x = -(y.x * A2323 - y.z * A0323 + y.w * A0223) * d;
+    m.y.y =  (x.x * A2323 - x.z * A0323 + x.w * A0223) * d;
+    m.y.z = -(x.x * A2313 - x.z * A0313 + x.w * A0213) * d;
+    m.y.w =  (x.x * A2303 - x.z * A0303 + x.w * A0203) * d;
+
+    m.z.x =  (y.x * A1323 - y.y * A0323 + y.w * A0123) * d;
+    m.z.y = -(x.x * A1323 - x.y * A0323 + x.w * A0123) * d;
+    m.z.z =  (x.x * A1313 - x.y * A0313 + x.w * A0113) * d;
+    m.z.w = -(x.x * A1303 - x.y * A0303 + x.w * A0103) * d;
+
+    m.w.x = -(y.x * A1223 - y.y * A0223 + y.z * A0123) * d;
+    m.w.y =  (x.x * A1223 - x.y * A0223 + x.z * A0123) * d;
+    m.w.z = -(x.x * A1213 - x.y * A0213 + x.z * A0113) * d;
+    m.w.w =  (x.x * A1203 - x.y * A0203 + x.z * A0103) * d;
+
+    return m;
+}
+
+template<typename T> // Works only with rotation and translation matrices.
+Matrix4GL_<T> Matrix4GL_<T>::FastInverse() const
+{
+    return Matrix4GL_<T>(x.x, y.x, z.x, 0, x.y, y.y, z.y, 0, x.z, y.z, z.z, 0,
+                         -(x.x * w.x + x.y * w.y + x.z * w.z),
+                         -(y.x * w.x + y.y * w.y + y.z * w.z),
+                         -(z.x * w.x + z.y * w.y + z.z * w.z), 1);
+}
+
+template<typename T>
+Matrix4GL_<T> operator*(const Matrix4GL_<T>& m1, const Matrix4GL_<T>& m2)
+{
+    Matrix4GL_<T> m;
+    m.x.x = m1.x.x * m2.x.x + m1.y.x * m2.x.y + m1.z.x * m2.x.z + m1.w.x * m2.x.w;
+    m.x.y = m1.x.y * m2.x.x + m1.y.y * m2.x.y + m1.z.y * m2.x.z + m1.w.y * m2.x.w;
+    m.x.z = m1.x.z * m2.x.x + m1.y.z * m2.x.y + m1.z.z * m2.x.z + m1.w.z * m2.x.w;
+    m.x.w = m1.x.w * m2.x.x + m1.y.w * m2.x.y + m1.z.w * m2.x.z + m1.w.w * m2.x.w;
+
+    m.y.x = m1.x.x * m2.y.x + m1.y.x * m2.y.y + m1.z.x * m2.y.z + m1.w.x * m2.y.w;
+    m.y.y = m1.x.y * m2.y.x + m1.y.y * m2.y.y + m1.z.y * m2.y.z + m1.w.y * m2.y.w;
+    m.y.z = m1.x.z * m2.y.x + m1.y.z * m2.y.y + m1.z.z * m2.y.z + m1.w.z * m2.y.w;
+    m.y.w = m1.x.w * m2.y.x + m1.y.w * m2.y.y + m1.z.w * m2.y.z + m1.w.w * m2.y.w;
+
+    m.z.x = m1.x.x * m2.z.x + m1.y.x * m2.z.y + m1.z.x * m2.z.z + m1.w.x * m2.z.w;
+    m.z.y = m1.x.y * m2.z.x + m1.y.y * m2.z.y + m1.z.y * m2.z.z + m1.w.y * m2.z.w;
+    m.z.z = m1.x.z * m2.z.x + m1.y.z * m2.z.y + m1.z.z * m2.z.z + m1.w.z * m2.z.w;
+    m.z.w = m1.x.w * m2.z.x + m1.y.w * m2.z.y + m1.z.w * m2.z.z + m1.w.w * m2.z.w;
+
+    m.w.x = m1.x.x * m2.w.x + m1.y.x * m2.w.y + m1.z.x * m2.w.z + m1.w.x * m2.w.w;
+    m.w.y = m1.x.y * m2.w.x + m1.y.y * m2.w.y + m1.z.y * m2.w.z + m1.w.y * m2.w.w;
+    m.w.z = m1.x.z * m2.w.x + m1.y.z * m2.w.y + m1.z.z * m2.w.z + m1.w.z * m2.w.w;
+    m.w.w = m1.x.w * m2.w.x + m1.y.w * m2.w.y + m1.z.w * m2.w.z + m1.w.w * m2.w.w;
+    return m;
+}
+
+template<typename T>
+Matrix4GL_<T>& operator*=(Matrix4GL_<T>& m1, const Matrix4GL_<T>& m2)
+{
+    return m1 = m1 * m2;
+}
+
+template<typename T>
+Matrix4GL_<T> operator/(const Matrix4GL_<T>& m1, const Matrix4GL_<T>& m2)
+{
+    return m1 * m2.Inverse();
+}
+
+template<typename T>
+Matrix4GL_<T>& operator/=(Matrix4GL_<T>& m1, const Matrix4GL_<T>& m2)
+{
+    return m1 = m1 / m2;
+}
+
+template<typename T>
+Point4_<T> operator*(const Point4_<T>& p, const Matrix4GL_<T>& m)
+{
+    return Point4_<T>(m.CX() ^ p, m.CY() ^ p, m.CZ() ^ p, m.CW() ^ p);
+}
+
+template<typename T>
+Matrix4GL_<T> operator*=(Point4_<T>& p, const Matrix4GL_<T>& m)
+{
+    return p = p * m;
+}
+
+template<typename T>
+Point3_<T> operator*(const Point3_<T>& p, const Matrix4GL_<T>& m)
+{
+    return Point4_<T>(
+        p.x * m.x.x + p.y * m.y.x + p.z * m.z.x + m.w.x,
+        p.x * m.x.y + p.y * m.y.y + p.z * m.z.y + m.w.y,
+        p.x * m.x.z + p.y * m.y.z + p.z * m.z.z + m.w.z,
+        p.x * m.x.w + p.y * m.y.w + p.z * m.z.w + m.w.w).ToPoint3DAffine();
+}
+
+
+template<typename T>
+Matrix4GL_<T> operator*=(Point3_<T>& p, const Matrix4GL_<T>& m)
+{
+    return p = p * m;
+}
+
+template<typename T>
+Point_<T> operator*(const Point_<T>& p, const Matrix4GL_<T>& m)
+{
+    return Point3_<T>(
+        p.x * m.x.x + p.y * m.y.x + m.w.x,
+        p.x * m.x.y + p.y * m.y.y + m.w.y,
+        p.x * m.x.w + p.y * m.y.w + m.w.w).ToPointfAffine();
+}
+
+template<typename T>
+Box3_<T> operator*(const Box3_<T>& box, const Matrix4GL_<T>& m)
+{
+    if(IsNull(box) || IsNull(m))
+        return Null;
+    Box3_<T> q;
+    for(const Point3_<T>& corner : box.GetCorners())
+        q.Expand(corner * m);
+    return q; // AAAB
+}
+
+template<typename T>
+Box3_<T> Transform(const Box3_<T>& box, const Matrix4GL_<T>& m)
+{
+    return box * m;
+}
+
+template<typename T>
+Box3_<T> operator^(const Box3_<T>& box, const Matrix4GL_<T>& m)
+{
+   if(IsNull(box) || IsNull(m))
+        return Null;
+
+    Point3_<T> center = box.Center();
+    Point3_<T> extent = box.Size() * T(0.5);
+    
+    Point3_<T> newcenter = center * m;
+    Point3_<T> newextent;
+
+    newextent.x = extent.x * abs(m.x.x) + extent.y * abs(m.y.x) + extent.z * abs(m.z.x);
+    newextent.y = extent.x * abs(m.x.y) + extent.y * abs(m.y.y) + extent.z * abs(m.z.y);
+    newextent.z = extent.x * abs(m.x.z) + extent.y * abs(m.y.z) + extent.z * abs(m.z.z);
+
+    return Box3_<T>(newcenter - newextent, newcenter + newextent);
+}
+
+template<typename T>
+Box3_<T> TransformAffine(const Box3_<T>& box, const Matrix4GL_<T>& m)
+{
+    return box ^ m;
+}
+
+template<typename T>
+Box3_<T> operator%(const Box3_<T>& box, const Matrix4GL_<T>& m)
+{
+    return m.IsAffine() ? TransformAffine(box, m) : Transform(box, m);
+}
+
+template<typename T>
+Box3_<T> OptimizedTransform(const Box3_<T>& box, const Matrix4GL_<T>& m)
+{
+    return box % m;
+}
+
+template<typename T>
+Matrix4GL_<T> operator*=(Point_<T>& p, const Matrix4GL_<T>& m)
+{
+    return p = p * m;
+}
+
+template<typename T>
+bool operator==(const Matrix4GL_<T>& m1, const Matrix4GL_<T>& m2)
+{
+    return m1.x == m2.x && m1.y == m2.y && m1.z == m2.z && m1.w == m2.w; // Useful in many cases. See IsEpsqual for fuzzy comparison
+}
+
+template<typename T>
+bool operator!=(const Matrix4GL_<T>& m1, const Matrix4GL_<T>& m2)
+{
+    return !(m1 == m2);
+}
+
+template<typename T> // Fuzzy comparison
+bool IsEpsqual(const Matrix4GL_<T>& m1, const Matrix4GL_<T>& m2, T epsilon = std::numeric_limits<T>::epsilon())
+{
+    return IsEpsqual(m1.x, m2.x, epsilon) && IsEpsqual(m1.y, m2.y, epsilon)
+        && IsEpsqual(m1.z, m2.z, epsilon) && IsEpsqual(m1.w, m2.w, epsilon);
+}
+
+using MatrixGL = Matrix4GL_<float>;
 }
 #endif
