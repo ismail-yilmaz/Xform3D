@@ -15,116 +15,116 @@ template<typename T> struct Point4_;
 template<typename T>
 struct Point3_ : Moveable<Point3_<T>> {
     T         x, y, z;
-    
+
     static_assert(std::is_floating_point<T>::value, "Upp::Point3_<T>: T must be a floating point type");
-    
-    Point3_() : x(0), y(0), z(0)                                   {}
-    Point3_(T x, T y, T z) : x(x), y(y), z(z)                      {}
-    Point3_(Point_<T> p, T z) : x(p.x), y(p.y), z(z)               {}
-    Point3_(Point_<T> p) : Point3_(p, 0)                           {}
-    Point3_(const Nuller&)                                         { x = y = z = Null; }
 
-    void           Clear()                                         { x = y = z = 0; }
-    bool           IsZero() const                                  { return x == 0 && y == 0 && z == 0; }
+    Point3_() : x(0), y(0), z(0)                                       {}
+    Point3_(T x, T y, T z) : x(x), y(y), z(z)                          {}
+    Point3_(Point_<T> p, T z) : x(p.x), y(p.y), z(z)                   {}
+    Point3_(Point_<T> p) : Point3_(p, 0)                               {}
+    Point3_(const Nuller&)                                             { x = y = z = Null; }
 
-    void           SetNull()                                       { x = y = z = Null; }
-    bool           IsNullInstance() const                          { return UPP::IsNull(x); }
+    void           Clear()                                             { x = y = z = 0; }
+    bool           IsZero() const                                      { return x == 0 && y == 0 && z == 0; }
 
-    Pointf         ToPointf() const                                { return Pointf(x, y); }
-    Pointf         ToPointfAffine() const                          { return z ? Pointf(x / z, y / z) : Null; }
+    void           SetNull()                                           { x = y = z = Null; }
+    bool           IsNullInstance() const                              { return UPP::IsNull(x); }
 
-    void           Offset(T dx, T dy, T dz)                        { x += dx; y += dy; z += dz; }
-    Point3_        Offseted(T dx, T dy, T dz)  const               { return Point3_(x + dx, y + dy, z + dz); }
-    
-    T              Squared() const                                 { return x * x + y * y + z * z; }
+    Pointf         ToPointf() const                                    { return Pointf(x, y); }
+    Pointf         ToPointfAffine() const                              { return z ? Pointf(x / z, y / z) : Null; }
 
-    T              Length() const                                  { return sqrt(x * x + y * y + z * z); }
-    
-    bool           IsUnit() const                                  { return Squared() - 1.0 <= std::numeric_limits<T>::epsilon(); }
+    void           Offset(T dx, T dy, T dz)                            { x += dx; y += dy; z += dz; }
+    Point3_        Offseted(T dx, T dy, T dz)  const                   { return Point3_(x + dx, y + dy, z + dz); }
 
-    Point3_&       Normalize()                                     { T l = Length(); if(l) { x /= l; y /= l; z /= l; } return *this; }
-    Point3_        Normalized() const                              { T l = Length(); return l ? Point3_(x / l, y / l, z / l) : Null; }
+    T              Squared() const                                     { return x * x + y * y + z * z; }
+
+    T              Length() const                                      { return sqrt(x * x + y * y + z * z); }
+
+    bool           IsUnit() const                                      { return Squared() - 1.0 <= std::numeric_limits<T>::epsilon(); }
+
+    Point3_&       Normalize()                                         { T l = Length(); if(l) { x /= l; y /= l; z /= l; } return *this; }
+    Point3_        Normalized() const                                  { T l = Length(); return l ? Point3_(x / l, y / l, z / l) : Null; }
 
     Point3_        FarthestAxis() const;
     int            FarthestAxisIndex() const;
-    
-    T              XYDirection() const                             { return atan2(y, x); }
-    T              YZDirection() const                             { return atan2(z, y); }
-    T              ZXDirection() const                             { return atan2(x, z); }
-    
+
+    T              XYDirection() const                                 { return atan2(y, x); }
+    T              YZDirection() const                                 { return atan2(z, y); }
+    T              ZXDirection() const                                 { return atan2(x, z); }
+
     T              Distance(const Point3_& p) const                                                 { return Point3_(*this - p).Length(); }
     T              DistanceToLine(const Point3_& p, const Point3_& direction) const;
     T              DistanceToPlane(const Point3_& p, const Point3_& normal) const;
     T              DistanceToPlane(const Point3_& a, const Point3_& b, const Point3_& c) const      { return (*this - a) ^ ((b - a) % (c - a)).Normalized(); }
 
-    Point3_&       operator=(const Point_<T>& p)                   { x = p.x; y = p.y; z = 0;  return *this;  }
-    Point3_&       operator=(const Point4_<T>& p)                  { x = p.x; y = p.y; z = p.z; return *this; }
+    Point3_&       operator=(const Point_<T>& p)                       { x = p.x; y = p.y; z = 0;  return *this;  }
+    Point3_&       operator=(const Point4_<T>& p)                      { x = p.x; y = p.y; z = p.z; return *this; }
 
-    Point3_&       operator+=(const Point3_& p)                    { x += p.x;  y += p.y;  z += p.z; return *this; }
-    Point3_&       operator+=(T t)                                 { x += t;    y += t;    z += t;   return *this; }
-    Point3_&       operator-=(const Point3_& p)                    { x -= p.x;  y -= p.y;  z -= p.z; return *this; }
-    Point3_&       operator-=(T t)                                 { x -= t;    y -= t;    z -= t;   return *this; }
-    Point3_&       operator*=(const Point3_& p)                    { x *= p.x;  y *= p.y;  z *= p.z; return *this; }
-    Point3_&       operator*=(T t)                                 { x *= t;    y *= t;    z *= t;   return *this; }
-    Point3_&       operator/=(const Point3_& p)                    { x /= p.x;  y /= p.y;  z /= p.z; return *this; }
-    Point3_&       operator/=(T t)                                 { x /= t;    y /= t;    z /= t;   return *this; }
+    Point3_&       operator+=(const Point3_& p)                        { x += p.x;  y += p.y;  z += p.z; return *this; }
+    Point3_&       operator+=(T t)                                     { x += t;    y += t;    z += t;   return *this; }
+    Point3_&       operator-=(const Point3_& p)                        { x -= p.x;  y -= p.y;  z -= p.z; return *this; }
+    Point3_&       operator-=(T t)                                     { x -= t;    y -= t;    z -= t;   return *this; }
+    Point3_&       operator*=(const Point3_& p)                        { x *= p.x;  y *= p.y;  z *= p.z; return *this; }
+    Point3_&       operator*=(T t)                                     { x *= t;    y *= t;    z *= t;   return *this; }
+    Point3_&       operator/=(const Point3_& p)                        { x /= p.x;  y /= p.y;  z /= p.z; return *this; }
+    Point3_&       operator/=(T t)                                     { x /= t;    y /= t;    z /= t;   return *this; }
 
-    Point3_&       operator++()                                    { ++x; ++y; ++z; return *this; }
-    Point3_&       operator--()                                    { --x; --y; --z; return *this; }
+    Point3_&       operator++()                                        { ++x; ++y; ++z; return *this; }
+    Point3_&       operator--()                                        { --x; --y; --z; return *this; }
 
-    friend Point3_ operator+(const Point3_& p)                     { return p; }
-    friend Point3_ operator-(const Point3_& p)                     { return Point3_(-p.x, -p.y, -p.z); }
+    friend Point3_ operator+(const Point3_& p)                         { return p; }
+    friend Point3_ operator-(const Point3_& p)                         { return Point3_(-p.x, -p.y, -p.z); }
 
-    friend Point3_ operator+(const Point3_& a, const Point3_& b)   { return Point3_(a.x + b.x, a.y + b.y, a.z + b.z); }
-    friend Point3_ operator+(const Point3_& a, T t)                { return Point3_(a.x + t, a.y + t, a.z + t); }
-    friend Point3_ operator-(const Point3_& a, const Point3_& b)   { return Point3_(a.x - b.x, a.y - b.y, a.z - b.z); }
-    friend Point3_ operator-(const Point3_& a, T t)                { return Point3_(a.x - t, a.y - t, a.z - t); }
-    friend Point3_ operator*(const Point3_& a, const Point3_& b)   { return Point3_(a.x * b.x, a.y * b.y, a.z * b.z); }
-    friend Point3_ operator*(const Point3_& a, T t)                { return Point3_(a.x * t, a.y * t, a.z * t); }
-    friend Point3_ operator/(const Point3_& a, const Point3_& b)   { return Point3_(a.x / b.x, a.y / b.y, a.z / b.z); }
-    friend Point3_ operator/(const Point3_& a, T t)                { return Point3_(a.x / t, a.y / t, a.z / t); }
+    friend Point3_ operator+(const Point3_& a, const Point3_& b)       { return Point3_(a.x + b.x, a.y + b.y, a.z + b.z); }
+    friend Point3_ operator+(const Point3_& a, T t)                    { return Point3_(a.x + t, a.y + t, a.z + t); }
+    friend Point3_ operator-(const Point3_& a, const Point3_& b)       { return Point3_(a.x - b.x, a.y - b.y, a.z - b.z); }
+    friend Point3_ operator-(const Point3_& a, T t)                    { return Point3_(a.x - t, a.y - t, a.z - t); }
+    friend Point3_ operator*(const Point3_& a, const Point3_& b)       { return Point3_(a.x * b.x, a.y * b.y, a.z * b.z); }
+    friend Point3_ operator*(const Point3_& a, T t)                    { return Point3_(a.x * t, a.y * t, a.z * t); }
+    friend Point3_ operator/(const Point3_& a, const Point3_& b)       { return Point3_(a.x / b.x, a.y / b.y, a.z / b.z); }
+    friend Point3_ operator/(const Point3_& a, T t)                    { return Point3_(a.x / t, a.y / t, a.z / t); }
 
-    friend T       operator^(const Point3_& a, const Point3_& b)   { return a.x * b.x + a.y * b.y + a.z * b.z; }
-    friend Point3_ operator%(const Point3_& a, const Point3_& b)   { return Point3_(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x); }
+    friend T       operator^(const Point3_& a, const Point3_& b)       { return a.x * b.x + a.y * b.y + a.z * b.z; }
+    friend Point3_ operator%(const Point3_& a, const Point3_& b)       { return Point3_(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x); }
 
-    friend bool    operator==(const Point3_& a, const Point3_& b)  { return a.x == b.x && a.y == b.y && a.z == b.z; }
-    friend bool    operator!=(const Point3_& a, const Point3_& b)  { return !(a == b); }
+    friend bool    operator==(const Point3_& a, const Point3_& b)      { return a.x == b.x && a.y == b.y && a.z == b.z; }
+    friend bool    operator!=(const Point3_& a, const Point3_& b)      { return !(a == b); }
 
-    friend Point3_ min(const Point3_& a, const Point3_& b)         { return Point3_(min(a.x, b.x), min(a.y, b.y), min(a.z, b.z));}
-    friend Point3_ max(const Point3_& a, const Point3_& b)         { return Point3_(max(a.x, b.x), max(a.y, b.y), max(a.z, b.z));}
-    
-    friend Point3_ Nvl(const Point3_& a, const Point3_& b)         { return IsNull(a) ? b : a; }
+    friend Point3_ min(const Point3_& a, const Point3_& b)             { return Point3_(min(a.x, b.x), min(a.y, b.y), min(a.z, b.z));}
+    friend Point3_ max(const Point3_& a, const Point3_& b)             { return Point3_(max(a.x, b.x), max(a.y, b.y), max(a.z, b.z));}
 
-    T              Min() const                                     { return min(min(x, y), z); }
-    T              Max() const                                     { return max(max(x, y), z); }
+    friend Point3_ Nvl(const Point3_& a, const Point3_& b)             { return IsNull(a) ? b : a; }
 
-    T              AbsMin() const                                  { return min(min(abs(x), abs(y)), abs(z)); }
-    T              AbsMax() const                                  { return max(max(abs(x), abs(y)), abs(z)); }
-    
-    Point_<T>      XY() const                                      { return Point_<T>(x, y); }
-    Point_<T>      YX() const                                      { return Point_<T>(y, x); }
+    T              Min() const                                         { return min(min(x, y), z); }
+    T              Max() const                                         { return max(max(x, y), z); }
 
-    Point_<T>      YZ() const                                      { return Point_<T>(y, z); }
-    Point_<T>      ZY() const                                      { return Point_<T>(z, y); }
+    T              AbsMin() const                                      { return min(min(abs(x), abs(y)), abs(z)); }
+    T              AbsMax() const                                      { return max(max(abs(x), abs(y)), abs(z)); }
 
-    Point_<T>      ZX() const                                      { return Point_<T>(z, x); }
-    Point_<T>      XZ() const                                      { return Point_<T>(x, z); }
+    Point_<T>      XY() const                                          { return Point_<T>(x, y); }
+    Point_<T>      YX() const                                          { return Point_<T>(y, x); }
 
-    hash_t         GetHashValue() const                            { return CombineHash(x, y, z); }
+    Point_<T>      YZ() const                                          { return Point_<T>(y, z); }
+    Point_<T>      ZY() const                                          { return Point_<T>(z, y); }
 
-    String         ToString() const                                { return Format("[x: %f, y: %f, z: %f]", x, y, z); }
+    Point_<T>      ZX() const                                          { return Point_<T>(z, x); }
+    Point_<T>      XZ() const                                          { return Point_<T>(x, z); }
 
-    operator       Value() const                                   { return FitsSvoValue<Point3_>() ? SvoToValue(*this) : RichToValue(*this); }
-    Point3_(const  Value& src)                                     { *this = src.Get<Point3_>(); }
+    hash_t         GetHashValue() const                                { return CombineHash(x, y, z); }
 
-    operator       Ref()                                           { return AsRef(*this); }
+    String         ToString() const                                    { return Format("[x: %f, y: %f, z: %f]", x, y, z); }
 
-    void           Serialize(Stream& s)                            { s % x % y % z; }
-    void           Jsonize(JsonIO& jio)                            { jio("x", x)("y", y)("z", z); }
-    void           Xmlize(XmlIO& xio)                              { xio.Attr("x", x).Attr("y", y).Attr("z", z); }
+    operator       Value() const                                       { return FitsSvoValue<Point3_>() ? SvoToValue(*this) : RichToValue(*this); }
+    Point3_(const  Value& src)                                         { *this = src.Get<Point3_>(); }
 
-    int            Compare(const Point3_&) const                   { NEVER(); return 0; }
-    int            PolyCompare(const Value&) const                 { NEVER(); return 0; }
+    operator       Ref()                                               { return AsRef(*this); }
+
+    void           Serialize(Stream& s)                                { s % x % y % z; }
+    void           Jsonize(JsonIO& jio)                                { jio("x", x)("y", y)("z", z); }
+    void           Xmlize(XmlIO& xio)                                  { xio.Attr("x", x).Attr("y", y).Attr("z", z); }
+
+    int            Compare(const Point3_&) const                       { NEVER(); return 0; }
+    int            PolyCompare(const Value&) const                     { NEVER(); return 0; }
 };
 
 template<typename T>
@@ -149,7 +149,7 @@ int Point3_<T>::FarthestAxisIndex() const
         return 0;
 
     // Below will likely be branchless in modern devices.
-    
+
     T tx = abs(x), ty = abs(y), tz = abs(z);
 
     int x_ge_y = static_cast<int>(tx >= ty);
@@ -239,7 +239,7 @@ struct Point4_ : Moveable<Point4_<T>> {
     T         x, y, z, w;
 
     static_assert(std::is_floating_point<T>::value, "Upp::Point4_<T>: T must be a floating point type");
-    
+
     Point4_() : x(0), y(0), z(0), w(0) {}
     Point4_(T x, T y, T z, T w) : x(x), y(y), z(z), w(w)           {}
     Point4_(Pointf p, T z, T w) : x(p.x), y(p.y), z(z), w(w)       {}
@@ -253,7 +253,7 @@ struct Point4_ : Moveable<Point4_<T>> {
 
     void           SetNull()                                       { x = y = z = w = Null; }
     bool           IsNullInstance() const                          { return UPP::IsNull(x); }
-    
+
     Pointf         ToPointf() const                                { return Pointf(x, y); }
     Pointf         ToPointfAffine() const                          { return z ? Pointf(x / z, y / z) : Null; }
     Point3_<T>     ToPoint3D() const                               { return Point3_<T>(x, y, z); }
@@ -261,24 +261,24 @@ struct Point4_ : Moveable<Point4_<T>> {
 
     void           Offset(T dx, T dy, T dz, T dw)                  { x += dx; y += dy; z += dz; w += dw; }
     Point4_        Offseted(T dx, T dy, T dz, T dw)  const         { return Point4_(x + dx, y + dy, z + dz, w + dw); }
-    
+
     T              Squared() const                                 { return x * x + y * y + z * z + w * w; }
 
     T              Length() const                                  { return sqrt(x * x + y * y + z * z + w * w); }
 
     bool           IsUnit() const                                  { return Squared() - 1.0 <= std::numeric_limits<T>::epsilon(); }
-    
+
     void           Normalize()                                     { T l = Length(); if(l) { x /= l; y /= l; z /= l; w /= l; } }
     Point4_        Normalized() const                              { T l = Length(); return l ? Point4_(x / l, y / l, z / l, w / l) : Null; }
 
     Point4_        FarthestAxis() const;
     int            FarthestAxisIndex() const;
-    
+
     T              XYDirection() const                             { return atan2(y, x); }
     T              YZDirection() const                             { return atan2(z, y); }
     T              ZWDirection() const                             { return atan2(w, z); }
     T              WXDirection() const                             { return atan2(x, w); }
-    
+
     Point4_&       operator=(const Point_<T>& p)                   { x = p.x; y = p.y; z = 0; w = 0;  return *this;  }
     Point4_&       operator=(const Point3_<T>& p)                  { x = p.x; y = p.y; z = p.z; w = 0; return *this; }
 
@@ -307,13 +307,13 @@ struct Point4_ : Moveable<Point4_<T>> {
     friend Point4_ operator/(const Point4_& a, T t)                { return Point4_(a.x / t, a.y / t, a.z / t, a.w / t); }
 
     friend T  operator^(const Point4_& a, const Point4_& b)        { return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w; }
- 
+
     friend bool    operator==(const Point4_& a, const Point4_& b)  { return a.x == b.x && a.y == b.y && a.z == b.z && a.w == b.w; }
     friend bool    operator!=(const Point4_& a, const Point4_& b)  { return !(a == b); }
 
     friend Point4_ min(const Point4_& a, const Point4_& b)         { return Point4_(min(a.x, b.x), min(a.y, b.y), min(a.z, b.z), min(a.w, b.w));}
     friend Point4_ max(const Point4_& a, const Point4_& b)         { return Point4_(max(a.x, b.x), max(a.y, b.y), max(a.z, b.z), max(a.w, b.w));}
-    
+
     friend Point4_ Nvl(const Point4_& a, const Point4_& b)         { return IsNull(a) ? b : a; }
 
     T              Min() const                                     { return min(min(min(x, y), z), w); }
@@ -321,19 +321,19 @@ struct Point4_ : Moveable<Point4_<T>> {
 
     T              AbsMin() const                                  { return min(min(min(abs(x), abs(y)), abs(z)), abs(w)); }
     T              AbsMax() const                                  { return max(max(max(abs(x), abs(y)), abs(z)), abs(w)); }
-    
+
     Point_<T>      XY() const                                      { return Point_<T>(x, y); }
     Point_<T>      YX() const                                      { return Point_<T>(y, x); }
 
     Point_<T>      YZ() const                                      { return Point_<T>(y, z); }
     Point_<T>      ZY() const                                      { return Point_<T>(z, y); }
-    
+
     Point_<T>      ZW() const                                      { return Point_<T>(z, w); }
     Point_<T>      WZ() const                                      { return Point_<T>(w, z); }
-    
+
     Point_<T>      WX() const                                      { return Point_<T>(w, x); }
     Point_<T>      XW() const                                      { return Point_<T>(x, w); }
-    
+
     hash_t         GetHashValue() const                            { return CombineHash(x, y, z, w); }
 
     String         ToString() const                                { return Format("[x: %f, y: %f, z: %f, w: %f]", x, y, z, w); }
@@ -373,7 +373,7 @@ int Point4_<T>::FarthestAxisIndex() const
 {
     if(IsZero() || IsNullInstance())
         return 0;
-    
+
     // Below will likely be branchless in modern devices.
 
     T tx = abs(x), ty = abs(y), tz = abs(z), tw = abs(w);
@@ -423,18 +423,18 @@ struct Box3_ : Moveable<Box3_<T>> {
     Point3_<T> lo, hi;
 
     static_assert(std::is_floating_point<T>::value, "Upp::Box3_<T>: T must be a floating point type");
-    
+
     Box3_()                                                                     {}
     Box3_(Point3_<T> lo, Point3_<T> hi) : lo(lo), hi(hi)                        {}
     Box3_(T lx, T ly, T lz, T hx, T hy, T hz) : lo(lx, ly, lz), hi(hx, hy, hz)  {}
     Box3_(const Nuller&)                                                        { SetNull(); }
-    
+
     void           Clear()                                         { lo.Clear(); hi.Clear(); }
     bool           IsZero() const                                  { return lo.IsZero() && hi.IsZero(); }
-    
+
     void           SetNull()                                       { lo.SetNull(); hi.SetNull(); }
     bool           IsNullInstance() const                          { return lo.IsNullInstance() || hi.IsNullInstance(); }
-    
+
     T              Width() const                                   { return hi.x - lo.x; }
     T              Height() const                                  { return hi.y - lo.y; }
     T              Depth() const                                   { return hi.z - lo.z; }
@@ -442,21 +442,21 @@ struct Box3_ : Moveable<Box3_<T>> {
     T              Volume() const                                  { Point3_<T> p = Size(); return p.x * p.y * p.z; }
     Point3_<T>     Center() const                                  { return (lo + hi) * T(0.5); }
     T              Diagonal() const                                { return sqrt(Size().Squared()); }
-    
+
     void           OffsetX(T dx)                                   { lo.x += dx; hi.x += dx; }
     void           OffsetY(T dy)                                   { lo.y += dy; hi.y += dy; }
     void           OffsetZ(T dz)                                   { lo.z += dz; hi.z += dz; }
     void           Offset(T d)                                     { lo += d; hi += d; }
     void           Offset(T dx, T dy, T dz)                        { lo.Offset(dx, dy, dz); hi.Offset(dx, dy, dz); }
     void           Offset(const Point3_<T>& p)                     { lo += p;  hi += p; }
-    
+
     Box3_          OffsetedX(T dx) const                           { return { lo.x + dx, lo.y, lo.z, hi.x + dx, hi.y, hi.z }; }
     Box3_          OffsetedY(T dy) const                           { return { lo.x, lo.y + dy, lo.z, hi.x, hi.y + dy, hi.z }; }
     Box3_          OffsetedZ(T dz) const                           { return { lo.x, lo.y, lo.z + dz, hi.x, hi.y, hi.z + dz }; }
     Box3_          Offseted(T d) const                             { return { lo + d, hi + d }; }
     Box3_          Offseted(T dx, T dy, T dz) const                { return { lo.x + dx, lo.y + dy, lo.z + dz, hi.x + dx, hi.y + dy, hi.z + dz }; }
     Box3_          Offseted(const Point3_<T>& p) const             { return { lo + p, hi + p }; }
-    
+
     void           InflateX(T dx)                                  { lo.x -= dx; hi.x += dx; }
     void           InflateY(T dy)                                  { lo.y -= dy; hi.y += dy; }
     void           InflateZ(T dz)                                  { lo.z -= dz; hi.z += dz; }
@@ -484,10 +484,10 @@ struct Box3_ : Moveable<Box3_<T>> {
     Box3_          Deflated(T d) const                             { return { lo + d,  hi - d }; }
     Box3_          Deflated(T dx, T dy, T dz) const                { return { lo + Point3_<T>(dx, dy, dz), hi - Point3_<T>( dx, dy, dz) };  }
     Box3_          Deflated(const Point3_<T>& p) const             { return { lo + p, hi - p }; }
-    
+
     void           Expand(const Point3_<T>& p)                     { lo = min(lo, p); hi = max(hi, p); }
     void           Expand(const Box3_& box)                        { Expand(box.lo); Expand(box.hi);   }
-    
+
     Box3_          Expanded(const Point3_<T>& p) const             { Box3_ b(lo, hi); b.Expand(p); return b;   }
     Box3_          Expanded(const Box3_& box) const                { Box3_ b(lo, hi); b.Expand(box); return b; }
 
@@ -495,15 +495,15 @@ struct Box3_ : Moveable<Box3_<T>> {
     bool           Contains(const Box3_& box) const                { return Contains(box.lo) && Contains(box.hi); }
 
     bool           Intersects(const Box3_& box) const              { return !(box.hi.x < lo.x || box.lo.x > hi.x || box.hi.y < lo.y || box.lo.y > hi.y || box.hi.z < lo.z || box.lo.z > hi.z); }
-    
+
     Box3_          Intersection(const Box3_& box) const            { return Intersects(box) ? Box3_(max(lo, box.lo), min (hi, box.hi)) : Null; }
 
     Box3_          Clamped(const Box3_& box) const                 { return { max(lo, box.lo), min(hi, box.hi) }; }
-    
+
     Tuple<Point3_<T>, T>  EnclosingCircle() const                  { return MakeTuple(Center(), Diagonal() * T(0.5)); }
-    
+
     Point3_<T>     ClosestPointTo(const Point3_<T>& p) const       { return max(lo, min(hi, p)); }
-    
+
     Vector<Point3_<T>> GetCorners() const;
 
     Box3_&         operator=(const Box3_<T>& box)                  { lo = box.lo; hi = box.hi; return *this;  }
@@ -537,7 +537,7 @@ struct Box3_ : Moveable<Box3_<T>> {
 
     friend Box3_   min(const Box3_& a, const Box3_& b)             { return Box3_(min(a.lo, b.lo), min(a.hi, b.hi)); }
     friend Box3_   max(const Box3_& a, const Box3_& b)             { return Box3_(max(a.lo, b.lo), max(a.hi, b.hi)); }
-    
+
     friend Box3_   Nvl(const Box3_& a, const Box3_& b)             { return IsNull(a) ? b : a; }
 
     hash_t         GetHashValue() const                            { return CombineHash(lo, hi); }
@@ -563,7 +563,7 @@ Vector<Point3_<T>> Box3_<T>::GetCorners() const
 {
     Vector<Point3_<T>> v;
     v.Reserve(8);
-    
+
     v << Point3_<T>(lo.x, lo.y, lo.z)
       << Point3_<T>(hi.x, lo.y, lo.z)
       << Point3_<T>(lo.x, hi.y, lo.z)
@@ -572,7 +572,7 @@ Vector<Point3_<T>> Box3_<T>::GetCorners() const
       << Point3_<T>(hi.x, lo.y, hi.z)
       << Point3_<T>(lo.x, hi.y, hi.z)
       << Point3_<T>(hi.x, hi.y, hi.z);
-      
+
     return v;
 }
 
@@ -596,7 +596,7 @@ struct Matrix4_ : Moveable<Matrix4_<T>> {
                  , y(yx, yy, yz, yw)
                  , z(zx, zy, zz, zw)
                  , w(wx, wy, wz, ww)                                           {}
-             
+
     Matrix4_(const Nuller&)                                                    { SetNull(); }
 
     static Matrix4_    Zero()                                                  { return Matrix4_(); }
@@ -643,9 +643,9 @@ struct Matrix4_ : Moveable<Matrix4_<T>> {
     void               Serialize(Stream& s)                                    { s % x % y % z % w; }
     void               Jsonize(JsonIO& jio)                                    { jio("rx", x)("ry", y)("rz", z)("rw", w); }
     void               Xmlize(XmlIO& xio)                                      { xio.Attr("rx", x).Attr("ry", y).Attr("rz", z).Attr("rw", w); }
-    
+
     String             ToString() const                                        { String s; s << "rx: " << x << '\n' << "ry: " << y << '\n' << "rz: " << z << '\n' << "rw: " << w; return s; }
-    
+
 };
 
 template<typename T>
@@ -713,13 +713,13 @@ Matrix4_<T> Matrix4_<T>::RotationZ(T angle)
 template<typename T>
 Matrix4_<T> Matrix4_<T>::Rotation(const Point3_<T>& angles)
 {
-	return RotationX(angles.x) * RotationY(angles.y) * RotationZ(angles.z);
+    return RotationX(angles.x) * RotationY(angles.y) * RotationZ(angles.z);
 }
 
 template<typename T>
 Matrix4_<T> Matrix4_<T>::Rotation(T anglex, T angley, T anglez)
 {
-	return RotationX(anglex) * RotationY(angley) * RotationZ(anglez);
+    return RotationX(anglex) * RotationY(angley) * RotationZ(anglez);
 }
 
 template<typename T>
@@ -748,7 +748,7 @@ Matrix4_<T> Matrix4_<T>::Perspective(T fov, T aspectratio, T fnear, T ffar)
 {
     if(aspectratio == 0 || fnear <= 0 || fnear == ffar)
         return Identity();
-    
+
     T f = static_cast<T>(1.0) / tan(fov * static_cast<T>(0.5));
     T depth = ffar - fnear;
 
@@ -767,7 +767,7 @@ Matrix4_<T> Matrix4_<T>::Frustum(const Rect_<T>& view, T fnear, T ffar)
 {
     if(view.IsEmpty() || fnear <= 0 || ffar <= 0 || fnear == ffar)
         return Null;
-    
+
     T w = view.Width();
     T h = view.Height();
     T clip = ffar - fnear;
@@ -1035,7 +1035,7 @@ Box3_<T> operator^(const Box3_<T>& box, const Matrix4_<T>& m)
 
     Point3_<T> center = box.Center();
     Point3_<T> extent = box.Size() * T(0.5);
-    
+
     Point3_<T> newcenter = center * m;
     Point3_<T> newextent;
 
@@ -1104,7 +1104,7 @@ struct Matrix4GL_ : Moveable<Matrix4GL_<T>> {
                  , y(yx, yy, yz, yw)
                  , z(zx, zy, zz, zw)
                  , w(wx, wy, wz, ww)                                           {}
-             
+
     Matrix4GL_(const Nuller&)                                                  { SetNull(); }
 
     static Matrix4GL_    Zero()                                                { return Matrix4GL_(); }
@@ -1113,12 +1113,12 @@ struct Matrix4GL_ : Moveable<Matrix4GL_<T>> {
     static Matrix4GL_    MirrorY()                                             { return Matrix4GL_( 1, 0, 0, 0, 0,-1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1); }
     static Matrix4GL_    MirrorZ()                                             { return Matrix4GL_( 1, 0, 0, 0, 0, 1, 0, 0, 0, 0,-1, 0, 0, 0, 0, 1); }
 
-    void                SetNull()                                              { x.SetNull(); y.SetNull(); z.SetNull(); w.SetNull(); }
+    void                 SetNull()                                             { x.SetNull(); y.SetNull(); z.SetNull(); w.SetNull(); }
 
-    bool                IsIdentity() const;
-    bool                IsZero() const                                         { return x.IsZero() && y.IsZero() && z.IsZero() && w.IsZero(); }
-    bool                IsNullInstance() const                                 { return IsNull(w); }
-    bool                IsAffine() const                                       { return w.w == 1 && x.w == 0 && y.w == 0 && z.w == 0; }
+    bool                 IsIdentity() const;
+    bool                 IsZero() const                                        { return x.IsZero() && y.IsZero() && z.IsZero() && w.IsZero(); }
+    bool                 IsNullInstance() const                                { return IsNull(w); }
+    bool                 IsAffine() const                                      { return w.w == 1 && x.w == 0 && y.w == 0 && z.w == 0; }
 
     static Matrix4GL_    Translation(const Point3_<T>& p);
     static Matrix4GL_    Translation(T x, T y, T z);
@@ -1148,12 +1148,12 @@ struct Matrix4GL_ : Moveable<Matrix4GL_<T>> {
     Point4_<T>           CZ() const                                            { return Point4_<T>(x.z, y.z, z.z, w.z); }
     Point4_<T>           CW() const                                            { return Point4_<T>(x.w, y.w, z.w, w.w); }
 
-    void                Serialize(Stream& s)                                   { s % x % y % z % w; }
-    void                Jsonize(JsonIO& jio)                                   { jio("rx", x)("ry", y)("rz", z)("rw", w); }
-    void                Xmlize(XmlIO& xio)                                     { xio.Attr("rx", x).Attr("ry", y).Attr("rz", z).Attr("rw", w); }
-    
-    String              ToString() const                                       { String s; s << "rx: " << x << '\n' << "ry: " << y << '\n' << "rz: " << z << '\n' << "rw: " << w; return s; }
-    
+    void                 Serialize(Stream& s)                                  { s % x % y % z % w; }
+    void                 Jsonize(JsonIO& jio)                                  { jio("rx", x)("ry", y)("rz", z)("rw", w); }
+    void                 Xmlize(XmlIO& xio)                                    { xio.Attr("rx", x).Attr("ry", y).Attr("rz", z).Attr("rw", w); }
+
+    String               ToString() const                                      { String s; s << "rx: " << x << '\n' << "ry: " << y << '\n' << "rz: " << z << '\n' << "rw: " << w; return s; }
+
 };
 
 template<typename T>
@@ -1256,7 +1256,7 @@ Matrix4GL_<T> Matrix4GL_<T>::Perspective(T fov, T aspectratio, T fnear, T ffar)
 {
     if(aspectratio == 0 || fnear <= 0 || fnear == ffar)
         return Identity();
-    
+
     T f = static_cast<T>(1.0) / tan(fov * static_cast<T>(0.5));
     T depth = ffar - fnear;
 
@@ -1275,7 +1275,7 @@ Matrix4GL_<T> Matrix4GL_<T>::Frustum(const Rect_<T>& view, T fnear, T ffar)
 {
     if(view.IsEmpty() || fnear <= 0 || ffar <= 0 || fnear == ffar)
         return Null;
-    
+
     T w = view.Width();
     T h = view.Height();
     T clip = ffar - fnear;
@@ -1546,7 +1546,7 @@ Box3_<T> operator^(const Box3_<T>& box, const Matrix4GL_<T>& m)
 
     Point3_<T> center = box.Center();
     Point3_<T> extent = box.Size() * T(0.5);
-    
+
     Point3_<T> newcenter = center * m;
     Point3_<T> newextent;
 
@@ -1601,5 +1601,216 @@ bool IsEpsqual(const Matrix4GL_<T>& m1, const Matrix4GL_<T>& m2, T epsilon = std
 }
 
 using MatrixGL = Matrix4GL_<float>;
+
+template<typename T>
+struct Quaternion_ : Moveable<Quaternion_<T>> {
+    T x, y, z, w;
+
+    static_assert(std::is_floating_point<T>::value, "Upp::Quaternion_<T>: T must be a floating point type");
+
+    Quaternion_() : x(0), y(0), z(0), w(1)                                     {}
+    Quaternion_(T x, T y, T z, T w) : x(x), y(y), z(z), w(w)                   {}
+    Quaternion_(const Nuller&)                                                 { SetNull(); }
+
+    void               Clear()                                                 { x = y = z = 0; w = 1; }
+    bool               IsZero() const                                          { return x == 0 && y == 0 && z == 0 && w == 0; }
+
+    void               SetNull()                                               { x = y = z = w = Null; }
+    bool               IsNullInstance() const                                  { return UPP::IsNull(w); }
+
+    void               SetFromAxisAngle(const Point3_<T>& axis, T angle);
+    T                  Length() const                                          { return sqrt((x * x) + (y * y) + (z * z) + (w * w)); }
+    void               Normalize();
+    Quaternion_<T>     Conjugate() const                                       { return Quaternion_<T>(-x, -y, -z, w); }
+    Quaternion_<T>     operator*(const Quaternion_<T>& q) const;
+    Point3_<T>         Rotate(const Point3_<T>& p) const;
+
+    Matrix4_<T>        GetMatrix() const;
+    Matrix4GL_<T>      GetMatrixGL() const;
+
+    static Quaternion_<T> Slerp(const Quaternion_<T>& qa, const Quaternion_<T>& qb, T t);
+
+    hash_t             GetHashValue() const                                    { return CombineHash(x, y, z, w); }
+
+    String             ToString() const                                        { return Format("[x: %f, y: %f, z: %f, w: %f]", x, y, z, w); }
+
+    operator           Value() const                                           { return FitsSvoValue<Quaternion_>() ? SvoToValue(*this) : RichToValue(*this); }
+    Quaternion_(const Value& src)                                              { *this = src.Get<Quaternion_>(); }
+
+    operator           Ref()                                                   { return AsRef(*this); }
+
+    void               Serialize(Stream& s)                                    { s % x % y % z % w; }
+    void               Jsonize(JsonIO& jio)                                    { jio("x", x)("y", y)("z", z)("w", w); }
+    void               Xmlize(XmlIO& xio)                                      { xio.Attr("x", x).Attr("y", y).Attr("z", z).Attr("w", w); }
+
+    int                Compare(const Quaternion_&) const                       { NEVER(); return 0; }
+    int                PolyCompare(const Value&) const                         { NEVER(); return 0; }
+};
+
+template<typename T>
+void Quaternion_<T>::SetFromAxisAngle(const Point3_<T>& axis, T angle)
+{
+    T halfa = angle * (T) 0.5;
+    T sa = sin(halfa);
+
+    x = axis.x * sa;
+    y = axis.y * sa;
+    z = axis.z * sa;
+    w = cos(halfa);
+}
+
+template<typename T>
+void Quaternion_<T>::Normalize()
+{
+    T len = Length();
+    if(len > (T) 0.00001) {
+        T invlen = (T) 1 / len;
+        x *= invlen;
+        y *= invlen;
+        z *= invlen;
+        w *= invlen;
+    }
+}
+
+template<typename T>
+Quaternion_<T> Quaternion_<T>::operator*(const Quaternion_<T>& q) const
+{
+    Quaternion_<T> res;
+    res.w = (w * q.w) - (x * q.x) - (y * q.y) - (z * q.z);
+    res.x = (w * q.x) + (x * q.w) + (y * q.z) - (z * q.y);
+    res.y = (w * q.y) - (x * q.z) + (y * q.w) + (z * q.x);
+    res.z = (w * q.z) + (x * q.y) - (y * q.x) + (z * q.w);
+    return res;
+}
+
+template<typename T>
+Point3_<T> Quaternion_<T>::Rotate(const Point3_<T>& p) const
+{
+    T px = (T) p.x;
+    T py = (T) p.y;
+    T pz = (T) p.z;
+
+    T ix =  (w * px) + (y * pz) - (z * py);
+    T iy =  (w * py) + (z * px) - (x * pz);
+    T iz =  (w * pz) + (x * py) - (y * px);
+    T iw = -(x * px) - (y * py) - (z * pz);
+
+    Point3_<T> res;
+    res.x = (ix * w) + (iw * -x) + (iy * -z) - (iz * -y);
+    res.y = (iy * w) + (iw * -y) + (iz * -x) - (ix * -z);
+    res.z = (iz * w) + (iw * -z) + (ix * -y) - (iy * -x);
+
+    return res;
+}
+
+template<typename T>
+Matrix4_<T> Quaternion_<T>::GetMatrix() const
+{
+    Matrix4_<T> m;
+    T xx = x * x, xy = x * y, xz = x * z, xw = x * w;
+    T yy = y * y, yz = y * z, yw = y * w;
+    T zz = z * z, zw = z * w;
+
+    m.x.x = (T) 1 - (T) 2 * (yy + zz);
+    m.x.y = (T) 2 * (xy + zw);
+    m.x.z = (T) 2 * (xz - yw);
+    m.x.w = (T) 0;
+
+    m.y.x = (T) 2 * (xy - zw);
+    m.y.y = (T) 1 - (T) 2 * (xx + zz);
+    m.y.z = (T) 2 * (yz + xw);
+    m.y.w = (T) 0;
+
+    m.z.x = (T) 2 * (xz + yw);
+    m.z.y = (T) 2 * (yz - xw);
+    m.z.z = (T) 1 - (T) 2 * (xx + yy);
+    m.z.w = (T) 0;
+
+    m.w.x = (T) 0;
+    m.w.y = (T) 0;
+    m.w.z = (T) 0;
+    m.w.w = (T) 1;
+
+    return m;
+}
+
+template<typename T>
+Matrix4GL_<T> Quaternion_<T>::GetMatrixGL() const
+{
+    Matrix4GL_<T> m;
+    T xx = x * x, xy = x * y, xz = x * z, xw = x * w;
+    T yy = y * y, yz = y * z, yw = y * w;
+    T zz = z * z, zw = z * w;
+
+    m.x.x = (T) 1 - (T) 2 * (yy + zz);
+    m.x.y = (T) 2 * (xy + zw);
+    m.x.z = (T) 2 * (xz - yw);
+    m.x.w = (T) 0;
+
+    m.y.x = (T) 2 * (xy - zw);
+    m.y.y = (T) 1 - (T) 2 * (xx + zz);
+    m.y.z = (T) 2 * (yz + xw);
+    m.y.w = (T) 0;
+
+    m.z.x = (T) 2 * (xz + yw);
+    m.z.y = (T) 2 * (yz - xw);
+    m.z.z = (T) 1 - (T) 2 * (xx + yy);
+    m.z.w = (T) 0;
+
+    m.w.x = (T) 0;
+    m.w.y = (T) 0;
+    m.w.z = (T) 0;
+    m.w.w = (T) 1;
+
+    return m;
+}
+
+template<typename T>
+Quaternion_<T> Quaternion_<T>::Slerp(const Quaternion_<T>& qa, const Quaternion_<T>& qb, T t)
+{
+    Quaternion_<T> qm;
+
+    T costh = (qa.x * qb.x) + (qa.y * qb.y) + (qa.z * qb.z) + (qa.w * qb.w);
+
+    Quaternion_<T> tgt = qb;
+    if(costh < (T) 0) {
+        tgt.x = -qb.x;
+        tgt.y = -qb.y;
+        tgt.z = -qb.z;
+        tgt.w = -qb.w;
+        costh = -costh;
+    }
+
+    if(costh >= (T) 0.999) {
+        qm.x = qa.x + t * (tgt.x - qa.x);
+        qm.y = qa.y + t * (tgt.y - qa.y);
+        qm.z = qa.z + t * (tgt.z - qa.z);
+        qm.w = qa.w + t * (tgt.w - qa.w);
+        qm.Normalize();
+        return qm;
+    }
+
+    T halfth = acos(costh);
+    T sinth = sqrt((T) 1 - costh * costh);
+
+    T ra = sin(((T) 1 - t) * halfth) / sinth;
+    T rb = sin(t * halfth) / sinth;
+
+    qm.x = (qa.x * ra) + (tgt.x * rb);
+    qm.y = (qa.y * ra) + (tgt.y * rb);
+    qm.z = (qa.z * ra) + (tgt.z * rb);
+    qm.w = (qa.w * ra) + (tgt.w * rb);
+
+    return qm;
+}
+
+template<typename T> // Fuzzy comparison
+bool IsEpsqual(const Quaternion_<T>& q1, const Quaternion_<T>& q2, T epsilon = std::numeric_limits<T>::epsilon())
+{
+    return IsEpsqual(q1.x, q2.x, epsilon) && IsEpsqual(q1.y, q2.y, epsilon)
+        && IsEpsqual(q1.z, q2.z, epsilon) && IsEpsqual(q1.w, q2.w, epsilon);
+}
+
+using Quaternion = Quaternion_<float>;
 }
 #endif

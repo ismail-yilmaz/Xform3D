@@ -91,7 +91,7 @@ with w `= 0.&]
 [s5;:Upp`:`:Point4`_`:`:ToPointfAffine`(`)const: Pointf [* ToPointfAffine]() 
 [@(0.0.255) const]&]
 [s2;%% Converts to 2D point using perspective division (x/z, y/z), 
-and discards w. Returns Null if z `=`= 0.&]
+and discards w. Returns Null if [C z `=`= 0].&]
 [s3; &]
 [s4; &]
 [s5;:Upp`:`:Point4`_`:`:ToPoint3D`(`)const: Point3`_<T> [* ToPoint3D]() 

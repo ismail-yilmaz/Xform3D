@@ -26,7 +26,7 @@ void TestPoint3D()
 	
 	// Check unit vector
 	ASSERT(Point3D(1, 0, 0).IsUnit());
-	ASSERT(Point3D(0.7071, 0.7071, 0).IsUnit());
+	ASSERT(Point3D(0.7071f, 0.7071f, 0).IsUnit());
 
 	// Basic equality
 	ASSERT(p1 * 2 == p2);
@@ -67,8 +67,8 @@ void TestPoint3D()
 	// Mid
 	ASSERT(Mid(Point3D(0, 0, 0), Point3D(2, 2, 2)) == Point3D(1, 1, 1));
 
-	// Normalize
-	ASSERT(fabs(p1.Normalized().Length() - 1.0) < 1e-10);
+	// Normalize (Adjusted tolerance for 32-bit floats)
+	ASSERT(fabs(p1.Normalized().Length() - 1.0f) < 1e-5f);
 	
 	// Offset
 	ASSERT(p1.Offseted(1, 1, 1) == Point3D(2, 3, 4));
@@ -81,11 +81,11 @@ void TestPoint3D()
 
 	Point3D po = {1, 2, 3};
 	Point3D against = { 0, 1, 0};
-	double dotproduct = 0.0;
+	float dotproduct = 0.0f;
 
 	// Orthogonal: Vector is perpendicular to "against"
 	dotproduct = Orthogonal(po, against) ^ against;
-	ASSERT(IsEpsqual(dotproduct, 0.0));
+	ASSERT(IsEpsqual(dotproduct, 0.0f));
 	
 	// Orthogonal: Preserve a component perpendicular to "against"
 	po = { 1, 0, 3 };
@@ -97,11 +97,11 @@ void TestPoint3D()
 	
 	// Orthonormal: Produce a unit vector
 	po = { 1, 2, 3 };
-	ASSERT(IsEpsqual(sqrt(Orthonormal(po, against).Squared()), 1.0));
+	ASSERT(IsEpsqual(sqrt(Orthonormal(po, against).Squared()), 1.0f));
 
 	// Orthonormal: Vector is perpendicular to against
 	dotproduct = Orthonormal(po, against) ^ against;
-	ASSERT(IsEpsqual(dotproduct, 0.0));
+	ASSERT(IsEpsqual(dotproduct, 0.0f));
 
 	// Hash
 	ASSERT(p1.GetHashValue() == CombineHash(p1.x, p1.y, p1.z));
@@ -138,7 +138,7 @@ void TestPoint4D()
 	
 	// Check unit vector
 	ASSERT(Point4D(1, 0, 0, 0).IsUnit());
-	ASSERT(Point4D(0.7071, 0, 0.7071, 0).IsUnit());
+	ASSERT(Point4D(0.7071f, 0.0f, 0.7071f, 0.0f).IsUnit());
 
 	// Basic equality
 	ASSERT(p1 * 2 == p2);
@@ -183,7 +183,7 @@ void TestPoint4D()
 	ASSERT(Mid(Point4D(0, 0, 0, 0), Point4D(2, 2, 2, 2)) == Point4D(1, 1, 1, 1));
 
 	// Normalize
-	ASSERT(fabs(p1.Normalized().Length() - 1.0) < 1e-10);
+	ASSERT(fabs(p1.Normalized().Length() - 1.0f) < 1e-5f);
 	
 	// Offset
 	ASSERT(p1.Offseted(1, 1, 1, 1) == Point4D(2, 3, 4, 2));
@@ -193,11 +193,11 @@ void TestPoint4D()
 
 	Point4D po = {1, 2, 3, 4};
 	Point4D against = { 0, 1, 0, 0 };
-	double dotproduct = 0.0;
+	float dotproduct = 0.0f;
 
 	// Orthogonal: Vector is perpendicular to "against"
 	dotproduct = Orthogonal(po, against) ^ against;
-	ASSERT(IsEpsqual(dotproduct, 0.0));
+	ASSERT(IsEpsqual(dotproduct, 0.0f));
 	
 	// Orthogonal: Preserve a component perpendicular to "against"
 	po = { 1, 0, 3, 4 };
@@ -209,11 +209,11 @@ void TestPoint4D()
 	
 	// Orthonormal: Produce a unit vector
 	po = { 1, 2, 3, 4 };
-	ASSERT(IsEpsqual(sqrt(Orthonormal(po, against).Squared()), 1.0));
+	ASSERT(IsEpsqual(sqrt(Orthonormal(po, against).Squared()), 1.0f));
 
 	// Orthonormal: Vector is perpendicular to against
 	dotproduct = Orthonormal(po, against) ^ against;
-	ASSERT(IsEpsqual(dotproduct, 0.0));
+	ASSERT(IsEpsqual(dotproduct, 0.0f));
 	
 	// Hash
 	ASSERT(p1.GetHashValue() == CombineHash(p1.x, p1.y, p1.z, p1.w));
@@ -247,7 +247,6 @@ void TestBox3D()
 		
 		// Null handling
 		ASSERT(IsNull(nullbox));
-
 	}
 
 	// Basic properties
@@ -264,13 +263,12 @@ void TestBox3D()
 		
 		// Volume
 		Point3D center = box.Center();
-		ASSERT(IsEpsqual(center.x, 3.5, 0.0001));
-		ASSERT(IsEpsqual(center.y, 5.0, 0.0001));
-		ASSERT(IsEpsqual(center.z, 6.5, 0.0001));
+		ASSERT(IsEpsqual(center.x, 3.5f, 0.0001f));
+		ASSERT(IsEpsqual(center.y, 5.0f, 0.0001f));
+		ASSERT(IsEpsqual(center.z, 6.5f, 0.0001f));
 		
 		// Diagonal
-		ASSERT(IsEpsqual(box.Diagonal(), 10.488, 0.001));
-		
+		ASSERT(IsEpsqual(box.Diagonal(), 10.488f, 0.001f));
 	}
 	
 	// Offset
@@ -425,7 +423,6 @@ void TestBox3D()
 		Box3D box6 = box;
 		box6.Deflate(Point3D(5, 10, 15));
 		ASSERT(box6 == Box3D(15, 30, 45, 55, 60, 65));
-
 	}
 	
 	// Deflated
@@ -690,7 +687,7 @@ void TestBox3D()
 		Box3D box2(2, 3, 4, 5, 6, 7);
 		Box3D box3(3, 4, 5, 6, 7, 8);
 
-		double scalar1 = 2.0, scalar2 = 3.0;
+		float scalar1 = 2.0f, scalar2 = 3.0f;
 		
 		ASSERT(+box1 == Box3D(1, 2, 3, 4, 5, 6));
 		ASSERT(-box1 == Box3D(-1, -2, -3, -4, -5, -6));
@@ -702,8 +699,8 @@ void TestBox3D()
 		ASSERT(box1 - scalar1 == Box3D(-1, 0, 1, 2, 3, 4));
 		ASSERT(box1 * box2 == Box3D(2, 6, 12, 20, 30, 42));
 		ASSERT(box1 * scalar1 == Box3D(2, 4, 6, 8, 10, 12));
-		ASSERT(IsEpsqual(box1 / box2, Box3D(0.5, 0.6667, 0.75, 0.8, 0.8333, 0.8571), 0.0001));
-		ASSERT(box1 / scalar1 == Box3D(0.5, 1, 1.5, 2, 2.5, 3));
+		ASSERT(IsEpsqual(box1 / box2, Box3D(0.5f, 0.6667f, 0.75f, 0.8f, 0.8333f, 0.8571f), 0.0001f));
+		ASSERT(box1 / scalar1 == Box3D(0.5f, 1.0f, 1.5f, 2.0f, 2.5f, 3.0f));
 		
 		// Chaining
 		Box3D result1 = box1 + box2 - box3;
@@ -712,7 +709,7 @@ void TestBox3D()
 
 		Box3D result2 = box1 * scalar1 + box2 / scalar2;
 		Box3D expected2 = (box1 * scalar1) + (box2 / scalar2);
-		ASSERT(IsEpsqual(result2, expected2, 0.0001));
+		ASSERT(IsEpsqual(result2, expected2, 0.0001f));
 
 		Box3D result3 = -box1 + box2;
 		Box3D expected3 = (-box1) + box2;
@@ -768,28 +765,28 @@ void TestMatrix4D()
 		ASSERT(!Matrix4D::Zero().IsAffine());
 		
 		// Rotation
-		Matrix4D rx = Matrix4D::RotationX(M_PI / 4.0);
-		Matrix4D ry = Matrix4D::RotationY(M_PI / 4.0);
-		Matrix4D rz = Matrix4D::RotationZ(M_PI / 4.0);
+		Matrix4D rx = Matrix4D::RotationX((float)M_PI / 4.0f);
+		Matrix4D ry = Matrix4D::RotationY((float)M_PI / 4.0f);
+		Matrix4D rz = Matrix4D::RotationZ((float)M_PI / 4.0f);
 	
-		ASSERT(IsEpsqual(rx * rx, Matrix4D::RotationX(M_PI / 2.0)));
-		ASSERT(IsEpsqual(ry * ry, Matrix4D::RotationY(M_PI / 2.0)));
-		ASSERT(IsEpsqual(rz * rz, Matrix4D::RotationZ(M_PI / 2.0)));
+		ASSERT(IsEpsqual(rx * rx, Matrix4D::RotationX((float)M_PI / 2.0f)));
+		ASSERT(IsEpsqual(ry * ry, Matrix4D::RotationY((float)M_PI / 2.0f)));
+		ASSERT(IsEpsqual(rz * rz, Matrix4D::RotationZ((float)M_PI / 2.0f)));
 	
 		// Scaling
-		Matrix4D scale = Matrix4D::Scale(2.0, 3.0, 4.0);
-		ASSERT(IsEpsqual(scale * scale, Matrix4D::Scale(4.0, 9.0, 16.0)));
+		Matrix4D scale = Matrix4D::Scale(2.0f, 3.0f, 4.0f);
+		ASSERT(IsEpsqual(scale * scale, Matrix4D::Scale(4.0f, 9.0f, 16.0f)));
 	
 		// Translation
-		Matrix4D trans = Matrix4D::Translation(1.0, 2.0, 3.0);
-		ASSERT(IsEpsqual(trans * trans, Matrix4D::Translation(2.0, 4.0, 6.0)));
+		Matrix4D trans = Matrix4D::Translation(1.0f, 2.0f, 3.0f);
+		ASSERT(IsEpsqual(trans * trans, Matrix4D::Translation(2.0f, 4.0f, 6.0f)));
 	
 		// Determinant
 		Matrix4D d(2, 0, 0, 0,
 				0, 3, 0, 0,
 				0, 0, 4, 0,
 				0, 0, 0, 1);
-		ASSERT(d.Determinant() == 2 * 3 * 4);
+		ASSERT(d.Determinant() == 2.0f * 3.0f * 4.0f);
 	
 		// Inverse
 		ASSERT(IsEpsqual(d * d.Inverse(), Matrix4D::Identity()));
@@ -797,39 +794,39 @@ void TestMatrix4D()
 
 	// Point3D tests
 	{
-		Point3D p(1.0, 0.0, 0.0);
+		Point3D p(1.0f, 0.0f, 0.0f);
 	
 		// Rotation (90 degrees Z)
-		Matrix4D rz90 = Matrix4D::RotationZ(M_PI / 2.0);
-		ASSERT(IsEpsqual(p * rz90, Point3D(0.0, 1.0, 0.0)));
+		Matrix4D rz90 = Matrix4D::RotationZ((float)M_PI / 2.0f);
+		ASSERT(IsEpsqual(p * rz90, Point3D(0.0f, 1.0f, 0.0f)));
 	
 		// Scaling
-		Matrix4D scale = Matrix4D::Scale(2.0, 3.0, 4.0);
-		ASSERT(IsEpsqual(Point3D(1.0, 1.0, 1.0) * scale, Point3D(2.0, 3.0, 4.0)));
+		Matrix4D scale = Matrix4D::Scale(2.0f, 3.0f, 4.0f);
+		ASSERT(IsEpsqual(Point3D(1.0f, 1.0f, 1.0f) * scale, Point3D(2.0f, 3.0f, 4.0f)));
 	
 		// Translation
-		Matrix4D trans = Matrix4D::Translation(5.0, -3.0, 2.0);
-		ASSERT(IsEpsqual(Point3D(1.0, 1.0, 1.0) * trans, Point3D(6.0, -2.0, 3.0)));
+		Matrix4D trans = Matrix4D::Translation(5.0f, -3.0f, 2.0f);
+		ASSERT(IsEpsqual(Point3D(1.0f, 1.0f, 1.0f) * trans, Point3D(6.0f, -2.0f, 3.0f)));
 	}
 
 	// Point4D tests
 	{
-		Point4D p(1.0, 2.0, 3.0, 1.0);
+		Point4D p(1.0f, 2.0f, 3.0f, 1.0f);
 		Matrix4D id = Matrix4D::Identity();
 	
 		// Identity
 		ASSERT(IsEpsqual(p * id, p));
 	
 		// Scaling
-		Matrix4D scale = Matrix4D::Scale(2.0, 2.0, 2.0);
-		ASSERT(IsEpsqual(p * scale, Point4D(2.0, 4.0, 6.0, 1.0)));
+		Matrix4D scale = Matrix4D::Scale(2.0f, 2.0f, 2.0f);
+		ASSERT(IsEpsqual(p * scale, Point4D(2.0f, 4.0f, 6.0f, 1.0f)));
 
 		// Translation
-		Matrix4D trans = Matrix4D::Translation(1.0, 2.0, 3.0);
-		ASSERT(IsEpsqual(p * trans, Point4D(2.0, 4.0, 6.0, 1.0)));
+		Matrix4D trans = Matrix4D::Translation(1.0f, 2.0f, 3.0f);
+		ASSERT(IsEpsqual(p * trans, Point4D(2.0f, 4.0f, 6.0f, 1.0f)));
 
 		// Homogeneous stability (w != 1)
-		Point4D q(1.0, 2.0, 3.0, 2.0);
+		Point4D q(1.0f, 2.0f, 3.0f, 2.0f);
 		ASSERT(IsEpsqual(q * id, q));
 	}
 
@@ -847,12 +844,12 @@ void TestMatrix4D()
 		
 		// TransformAffine (^ operator)
 		{
-			Matrix4D scaling = Matrix4D::Scale(2, 3, 4);
+			Matrix4D scaling = Matrix4D::Scale(2.0f, 3.0f, 4.0f);
 			Box3D result1 = box ^ scaling;
 			
 			// For affine transformation, we calculate based on center and extents
 			Point3D center = box.Center();
-			Point3D extents = box.Size() * 0.5;
+			Point3D extents = box.Size() * 0.5f;
 			Point3D newcenter = center * scaling;
 			Point3D newextents(
 				extents.x * abs(scaling.x.x) + extents.y * abs(scaling.y.x) + extents.z * abs(scaling.z.x),
@@ -863,7 +860,7 @@ void TestMatrix4D()
 			ASSERT(IsEpsqual(expected1, result1));
 			
 			// Test rotation around Y axis by 90 degrees
-			Matrix4D rotationY = Matrix4D::RotationY(M_PI / 2);
+			Matrix4D rotationY = Matrix4D::RotationY((float)M_PI / 2.0f);
 			Box3D result2 = box ^ rotationY;
 			
 			Point3D newcenter2 = center * rotationY;
@@ -886,6 +883,49 @@ void TestMatrix4D()
 	LOG("Matrix4D: All tests passed.");
 }
 
+void TestQuaternion()
+{
+	// Initialization and defaults
+	Quaternion q1;
+	ASSERT(q1.x == 0.0f && q1.y == 0.0f && q1.z == 0.0f && q1.w == 1.0f);
+	ASSERT(IsEpsqual(q1.Length(), 1.0f));
+	
+	// Axis angle construction (90 degrees around Y axis)
+	Quaternion q2;
+	q2.SetFromAxisAngle(Point3D(0.0f, 1.0f, 0.0f), (float) M_PI / 2.0f);
+	
+	// Test Rotate functionality (90 deg Y)
+	Point3D p(1.0f, 0.0f, 0.0f);
+	Point3D rp = q2.Rotate(p);
+	ASSERT(IsEpsqual(rp.x, 0.0f, 1e-5f) && IsEpsqual(rp.y, 0.0f, 1e-5f) && IsEpsqual(rp.z, -1.0f, 1e-5f));
+	
+	// Conjugate (Inverse for unit quaternions)
+	Quaternion q3 = q2.Conjugate();
+	Point3D rinv = q3.Rotate(rp);
+	ASSERT(IsEpsqual(rinv.x, 1.0f, 1e-5f) && IsEpsqual(rinv.y, 0.0f, 1e-5f) && IsEpsqual(rinv.z, 0.0f, 1e-5f));
+	
+	// Combining rotations via multiplication
+	Quaternion q4;
+	q4.SetFromAxisAngle(Point3D(1.0f, 0.0f, 0.0f), (float)M_PI / 2.0f); // 90 degrees X
+	Quaternion qCombined = q4 * q2; // Y first, then X
+	Point3D rc = qCombined.Rotate(p);
+	
+	// p(1,0,0) -> 90 deg Y -> (0,0,-1) -> 90 deg X -> (0,1,0)
+	ASSERT(IsEpsqual(rc.x, 0.0f, 1e-5f) && IsEpsqual(rc.y, 1.0f, 1e-5f) && IsEpsqual(rc.z, 0.0f, 1e-5f));
+	
+	// Spherical Linear Interpolation (SLERP)
+	Quaternion qs = Quaternion::Slerp(q1, q2, 0.5f); // 45 degrees Y
+	Point3D rs = qs.Rotate(p);
+	ASSERT(IsEpsqual(rs.x, 0.707106f, 1e-5f) && IsEpsqual(rs.y, 0.0f, 1e-5f) && IsEpsqual(rs.z, -0.707106f, 1e-5f));
+	
+	// Matrix conversions
+	Matrix4D m = q2.GetMatrix();
+	Point3D mp = p * m; // Point matrix multiplication
+	ASSERT(IsEpsqual(mp.x, rp.x, 1e-5f) && IsEpsqual(mp.y, rp.y, 1e-5f) && IsEpsqual(mp.z, rp.z, 1e-5f));
+	
+	LOG("Quaternion: All tests passed.");
+}
+
 CONSOLE_APP_MAIN
 {
 	StdLogSetup(LOG_COUT|LOG_FILE);
@@ -894,5 +934,5 @@ CONSOLE_APP_MAIN
 	TestPoint4D();
 	TestBox3D();
 	TestMatrix4D();
-
+	TestQuaternion();
 }
