@@ -6,7 +6,7 @@
 
 using namespace Upp;
 
-#define LAYOUTFILE <Teapot3D/Teapot3D.lay>
+#define LAYOUTFILE <examples/Teapot3D/Teapot3D.lay>
 #include <CtrlCore/lay.h>
 
 struct Triangle : Moveable<Triangle> {
@@ -25,7 +25,7 @@ public:
 private:
 	Vector<Triangle> object3d;
 	SplitterFrame sf;
-	WithPanelLayout<ParentCtrl> panel;
+	WithPanelLayout<StaticRect> panel;
 };
 
 #endif
