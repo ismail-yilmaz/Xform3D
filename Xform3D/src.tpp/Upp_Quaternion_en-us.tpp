@@ -12,14 +12,15 @@ topic "Quaternion";
 [{_} 
 [ {{10000@(113.42.0) [s0;%% [*@7;4 Quaternion`_]]}}&]
 [s0; &]
-[s1;:noref: [@(0.0.255)3 template][3  <][@(0.0.255)3 typename][3  T>]&]
+[s1;:noref: [@(0.0.255)3 template][3  <][@(0.0.255)3 typename][3  ][*@4;3 T][3 >]&]
 [s1;:Upp`:`:Quaternion`_: [@(0.0.255) struct] [* Quaternion`_] [@(0.0.255) :] 
 Moveable<[* Quaternion`_]<T>>&]
-[s2;%% This structure encapsulates a mathematical quaternion, primarily 
-utilized for robust, Gimbal`-Lock`-free 3D rotations and smooth 
-spherical interpolation. It also provides seamless conversions 
-to 4x4 matrices for both standard (row`-major) and OpenGL (column`-major) 
-rendering pipelines.&]
+[s2;%% This structure encapsulates a mathematical quaternion.  [%-*@4 T] 
+must be a floating`-point type (enforced via static`_assert). 
+Typically utilized for robust, Gimbal`-Lock`-free 3D rotations 
+and smooth spherical interpolation. It also provides seamless 
+conversions to 4x4 matrices for both standard (row`-major) and 
+OpenGL (column`-major) rendering pipelines.&]
 [s3; &]
 [ {{10000F(128)G(128)@1 [s0;%% [* Specializations]]}}&]
 [s3; &]
@@ -158,7 +159,7 @@ onst] Value[@(0.0.255) `&] [*@3 src])&]
 [s4; &]
 [s5;:Upp`:`:Quaternion`_`:`:Jsonize`(JsonIO`&`): [@(0.0.255) void] 
 [* Jsonize](JsonIO[@(0.0.255) `&] [*@3 jio])&]
-[s2;%% Jsonizes the quaternion object to.&]
+[s2;%% Jsonizes the quaternion object.&]
 [s3; &]
 [s4; &]
 [s5;:Upp`:`:Quaternion`_`:`:Xmlize`(XmlIO`&`): [@(0.0.255) void] [* Xmlize](XmlIO[@(0.0.255) `&

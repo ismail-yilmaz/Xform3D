@@ -13,7 +13,8 @@ topic "Point4D";
 [ {{10000@(113.42.0) [s0;%% [*@7;4 Point4`_]]}}&]
 [s0; &]
 [s1;:noref: [@(0.0.255)3 template][3  <][@(0.0.255)3 typename][3  ][*@4;3 T][3 >]&]
-[s1;:Upp`:`:Point4`_: [@(0.0.255) struct ][* Point4`_]&]
+[s1;:Upp`:`:Point4`_: [@(0.0.255) struct ][* Point4`_ : ][@(0.0.255) :] Moveable<[* Point4`_]<[*@4;3 T
+]>>&]
 [s2;%% Represents a 4D point (vector) with x, y, z, w coordinates. 
 [%-*@4 T] must be a floating`-point type (enforced via static`_assert). 
 Typically used for homogeneous coordinates in 3D transformations.&]

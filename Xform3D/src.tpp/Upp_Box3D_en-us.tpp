@@ -13,7 +13,8 @@ topic "Box3D";
 [ {{10000@(113.42.0) [s0;%% [*@7;4 Box3`_]]}}&]
 [s0; &]
 [s1;:noref: [@(0.0.255)3 template][3  <][@(0.0.255)3 typename][3  ][*@4;3 T][3 >]&]
-[s1;:Upp`:`:Box3`_: [* Box3`_] [@(0.0.255) :] Moveable<[* Box3`_]<[*@4;3 T]>>&]
+[s1;:Upp`:`:Box3`_: [@(0.0.255) struct ][* Box3`_] [@(0.0.255) :] Moveable<[* Box3`_]<[*@4;3 T]>
+>&]
 [s2;%% A 3D axis`-aligned (bounding) box template. [%-*@4 T] must be 
 a floating`-point type (enforced via static`_assert). Useful 
 for geometry, graphics, and spatial queries. &]

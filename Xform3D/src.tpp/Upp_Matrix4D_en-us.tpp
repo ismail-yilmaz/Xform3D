@@ -13,7 +13,8 @@ topic "Matrix4D";
 [ {{10000@(113.42.0) [s0;%% [*@7;4 Matrix4`_]]}}&]
 [s0; &]
 [s1;:noref: [@(0.0.255)3 template][3  <][@(0.0.255)3 typename][3  ][*@4;3 T][3 >]&]
-[s1;:Upp`:`:Matrix4`_: [* Matrix4`_] [@(0.0.255) :] Moveable<[* Matrix4`_]<[*@4;3 T]>>&]
+[s1;:Upp`:`:Matrix4`_: [@(0.0.255) struct ][* Matrix4`_] [@(0.0.255) :] 
+Moveable<[* Matrix4`_]<[*@4;3 T]>>&]
 [s2;%% A 4×4 matrix template for 3D transformations and projections. 
 [%-*@4 T] must be a floating`-point type (enforced via static`_assert). 
  Supports affine transformations, perspective/frustum/ortho projections, 
