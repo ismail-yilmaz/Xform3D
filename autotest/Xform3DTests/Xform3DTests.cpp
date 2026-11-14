@@ -925,6 +925,384 @@ void TestQuaternion()
 	
 	LOG("Quaternion: All tests passed.");
 }
+void TestRay3D()
+{
+	// Construction and state
+	{
+		Ray3D r1;
+		Ray3D r2(Point3D(1, 2, 3), Point3D(0, 0, 1));
+		Ray3D r3(1, 2, 3, 0, 0, 1);
+		Ray3D nullray = Null;
+
+		ASSERT(r1.IsZero());
+		ASSERT(r1.origin.IsZero() && r1.direction.IsZero());
+		ASSERT(r2 == r3);
+		ASSERT(r2.origin == Point3D(1, 2, 3) && r2.direction == Point3D(0, 0, 1));
+		ASSERT(IsNull(nullray));
+		ASSERT(Nvl(nullray, r2) == r2);
+		ASSERT(Nvl(r2, r1) == r2);
+
+		r3.SetNull();
+		ASSERT(IsNull(r3));
+		r3.Clear();
+		ASSERT(r3.IsZero());
+
+		Ray3D r4 = Ray3D::FromPoints(Point3D(1, 2, 3), Point3D(1, 2, 10));
+		ASSERT(r4.origin == Point3D(1, 2, 3));
+		ASSERT(IsEpsqual(r4.direction, Point3D(0, 0, 1)));
+		ASSERT(r4.IsUnit());
+	}
+
+	// Evaluation, normalization and offset
+	{
+		Ray3D ray(Point3D(1, 2, 3), Point3D(0, 3, 4));
+		ASSERT(!ray.IsUnit());
+
+		Ray3D norm = ray.Normalized();
+		ASSERT(norm.IsUnit());
+		ASSERT(IsEpsqual(norm.direction, Point3D(0.0f, 0.6f, 0.8f)));
+
+		ray.Normalize();
+		ASSERT(ray.IsUnit());
+		ASSERT(IsEpsqual(ray.At(5.0f), Point3D(1.0f, 5.0f, 7.0f)));
+		ASSERT(IsEpsqual(ray(5.0f), ray.At(5.0f)));
+
+		Ray3D off = ray.Offseted(2, 3, 4);
+		ASSERT(off.origin == Point3D(3, 5, 7));
+		ASSERT(off.direction == ray.direction);
+
+		off.Offset(Point3D(-2, -3, -4));
+		ASSERT(off == ray);
+	}
+
+	// Closest point and distance
+	{
+		Ray3D ray(Point3D(0, 0, 0), Point3D(1, 0, 0));
+
+		// Forward projection (t > 0)
+		ASSERT(IsEpsqual(ray.ClosestPointTo(Point3D(3, 4, 0)), Point3D(3, 0, 0)));
+		ASSERT(IsEpsqual(ray.DistanceTo(Point3D(3, 4, 0)), 4.0f));
+
+		// Behind origin (clamped to t = 0)
+		ASSERT(IsEpsqual(ray.ClosestPointTo(Point3D(-3, 4, 0)), Point3D(0, 0, 0)));
+		ASSERT(IsEpsqual(ray.DistanceTo(Point3D(-3, 4, 0)), 5.0f));
+
+		// On ray
+		ASSERT(IsEpsqual(ray.ClosestPointTo(Point3D(5, 0, 0)), Point3D(5, 0, 0)));
+		ASSERT(IsEpsqual(ray.DistanceTo(Point3D(5, 0, 0)), 0.0f));
+	}
+
+	// Plane intersection
+	{
+		Ray3D ray(Point3D(0, 0, 5), Point3D(0, 0, -1));
+		Point3D pp(0, 0, 0);
+		Point3D pn(0, 0, 1);
+
+		Ray3D::Hit hit = ray.IntersectPlane(pp, pn);
+		ASSERT(hit);
+		ASSERT(IsEpsqual(hit.distance, 5.0f));
+		ASSERT(IsEpsqual(hit.point, Point3D(0, 0, 0)));
+		ASSERT(IsEpsqual(hit.normal, Point3D(0, 0, 1)));
+
+		// Back-face culling
+		Ray3D backray(Point3D(0, 0, -5), Point3D(0, 0, 1));
+		ASSERT(!backray.IntersectPlane(pp, pn, false));
+		Ray3D::Hit backhit = backray.IntersectPlane(pp, pn, true);
+		ASSERT(backhit);
+		ASSERT(IsEpsqual(backhit.distance, 5.0f));
+
+		// Parallel and behind-origin misses
+		Ray3D parray(Point3D(0, 0, 5), Point3D(1, 0, 0));
+		Ray3D awayray(Point3D(0, 0, 5), Point3D(0, 0, 1));
+		ASSERT(!parray.IntersectPlane(pp, pn));
+		ASSERT(!awayray.IntersectPlane(pp, pn));
+	}
+
+	// Sphere intersection
+	{
+		Point3D center(0, 0, 0);
+		float radius = 2.0f;
+
+		// Hit from outside
+		Ray3D ray(Point3D(0, 0, 5), Point3D(0, 0, -1));
+		ASSERT(ray.IntersectsSphere(center, radius));
+		ASSERT(!ray.IntersectsSphere(center, radius, 2.0f));
+
+		Ray3D::Hit hit = ray.IntersectSphere(center, radius);
+		ASSERT(hit);
+		ASSERT(IsEpsqual(hit.distance, 3.0f));
+		ASSERT(IsEpsqual(hit.point, Point3D(0, 0, 2)));
+		ASSERT(IsEpsqual(hit.normal, Point3D(0, 0, 1)));
+
+		// Origin inside sphere
+		Ray3D inray(Point3D(0, 0, 0), Point3D(0, 0, -1));
+		Ray3D::Hit inhit = inray.IntersectSphere(center, radius);
+		ASSERT(inhit);
+		ASSERT(IsEpsqual(inhit.distance, 2.0f));
+		ASSERT(IsEpsqual(inhit.point, Point3D(0, 0, -2)));
+
+		// Misses
+		Ray3D missray(Point3D(5, 0, 5), Point3D(0, 0, -1));
+		Ray3D awayray(Point3D(0, 0, 5), Point3D(0, 0, 1));
+		ASSERT(!missray.IntersectsSphere(center, radius));
+		ASSERT(!missray.IntersectSphere(center, radius));
+		ASSERT(!awayray.IntersectsSphere(center, radius));
+	}
+
+	// Box3D intersection
+	{
+		Box3D box(-1, -1, -1, 1, 1, 1);
+
+		Ray3D ray(Point3D(0, 0, 5), Point3D(0, 0, -1));
+		float tmin = 0.0f, tmax = 0.0f;
+		ASSERT(ray.Intersects(box, tmin, tmax));
+		ASSERT(IsEpsqual(tmin, 4.0f));
+		ASSERT(IsEpsqual(tmax, 6.0f));
+		ASSERT(ray.Intersects(box));
+		ASSERT(!ray.Intersects(box, 3.0f));
+
+		Ray3D::Hit hit = ray.Intersect(box);
+		ASSERT(hit);
+		ASSERT(IsEpsqual(hit.distance, 4.0f));
+		ASSERT(IsEpsqual(hit.point, Point3D(0, 0, 1)));
+		ASSERT(IsEpsqual(hit.normal, Point3D(0, 0, 1)));
+		ASSERT(!ray.Intersect(box, 3.0f));
+
+		// Origin inside box
+		Ray3D inray(Point3D(0, 0, 0), Point3D(1, 0, 0));
+		ASSERT(inray.Intersects(box, tmin, tmax));
+		ASSERT(tmin <= 0.0f && IsEpsqual(tmax, 1.0f));
+		Ray3D::Hit inhit = inray.Intersect(box);
+		ASSERT(inhit);
+		ASSERT(IsEpsqual(inhit.point, Point3D(1, 0, 0)));
+
+		// Miss
+		Ray3D missray(Point3D(5, 5, 5), Point3D(0, 0, -1));
+		ASSERT(!missray.Intersects(box));
+		ASSERT(!missray.Intersect(box));
+	}
+
+	// Triangle intersection
+	{
+		Point3D v0(-1, -1, 0);
+		Point3D v1( 1, -1, 0);
+		Point3D v2( 0,  1, 0);
+
+		Ray3D ray(Point3D(0, 0, 5), Point3D(0, 0, -1));
+		ASSERT(ray.IntersectsTriangle(v0, v1, v2));
+		ASSERT(!ray.IntersectsTriangle(v0, v1, v2, false, 4.0f));
+
+		Ray3D::Hit hit = ray.IntersectTriangle(v0, v1, v2);
+		ASSERT(hit);
+		ASSERT(IsEpsqual(hit.distance, 5.0f));
+		ASSERT(IsEpsqual(hit.point, Point3D(0, 0, 0)));
+		ASSERT(IsEpsqual(hit.normal, Point3D(0, 0, 1)));
+		ASSERT(IsEpsqual(hit.barycentric.x + hit.barycentric.y + hit.barycentric.z, 1.0f, 1e-5f));
+
+		Point3D bp = v0 * hit.barycentric.x + v1 * hit.barycentric.y + v2 * hit.barycentric.z;
+		ASSERT(IsEpsqual(bp, hit.point, 1e-5f));
+
+		// Vertex hit barycentric check
+		Ray3D vray(Point3D(-1, -1, 3), Point3D(0, 0, -1));
+		Ray3D::Hit vhit = vray.IntersectTriangle(v0, v1, v2);
+		ASSERT(vhit);
+		ASSERT(IsEpsqual(vhit.barycentric, Point3D(1, 0, 0), 1e-5f));
+
+		// Back-face culling
+		Ray3D backray(Point3D(0, 0, -5), Point3D(0, 0, 1));
+		ASSERT(!backray.IntersectsTriangle(v0, v1, v2, false));
+		ASSERT(!backray.IntersectTriangle(v0, v1, v2, false));
+		ASSERT(backray.IntersectsTriangle(v0, v1, v2, true));
+		Ray3D::Hit backhit = backray.IntersectTriangle(v0, v1, v2, true);
+		ASSERT(backhit);
+		ASSERT(IsEpsqual(backhit.distance, 5.0f));
+
+		// Outside triangle bounds
+		Ray3D missray(Point3D(2, 2, 5), Point3D(0, 0, -1));
+		ASSERT(!missray.IntersectsTriangle(v0, v1, v2, true));
+		ASSERT(!missray.IntersectTriangle(v0, v1, v2, true));
+	}
+
+	// UnProject (MatrixGL and Matrix4D)
+	{
+		Rectf vp(0, 0, 800, 600);
+		Pointf center(400, 300);
+
+		// MatrixGL
+		MatrixGL projgl = MatrixGL::Perspective((float)(M_PI / 3.0), 800.0f / 600.0f, 0.1f, 100.0f);
+		MatrixGL viewgl = MatrixGL::LookAt(Point3D(0, 0, 5), Point3D(0, 0, 0), Point3D(0, 1, 0));
+		Ray3D rgl1 = Ray3D::UnProject(center, vp, projgl, viewgl);
+		Ray3D rgl2 = Ray3D::UnProject(center, vp, projgl * viewgl);
+
+		ASSERT(!IsNull(rgl1) && rgl1.IsUnit());
+		ASSERT(IsEpsqual(rgl1.direction, Point3D(0, 0, -1), 1e-5f));
+		ASSERT(IsEpsqual(rgl1, rgl2, 1e-5f));
+
+		Ray3D::Hit hgl = rgl1.IntersectPlane(Point3D(0, 0, 0), Point3D(0, 0, 1));
+		ASSERT(hgl && IsEpsqual(hgl.point, Point3D(0, 0, 0), 1e-5f));
+
+		// Matrix4D
+		Matrix4D proj4 = Matrix4D::Perspective((float)(M_PI / 3.0), 800.0f / 600.0f, 0.1f, 100.0f);
+		Matrix4D view4 = Matrix4D::LookAt(Point3D(0, 0, 5), Point3D(0, 0, 0), Point3D(0, 1, 0));
+		Ray3D r41 = Ray3D::UnProject(center, vp, proj4, view4);
+		Ray3D r42 = Ray3D::UnProject(center, vp, view4 * proj4);
+
+		ASSERT(!IsNull(r41) && r41.IsUnit());
+		ASSERT(IsEpsqual(r41.direction, Point3D(0, 0, -1), 1e-5f));
+		ASSERT(IsEpsqual(r41, r42, 1e-5f));
+
+		Ray3D::Hit h4 = r41.IntersectPlane(Point3D(0, 0, 0), Point3D(0, 0, 1));
+		ASSERT(h4 && IsEpsqual(h4.point, Point3D(0, 0, 0), 1e-5f));
+
+		// Degenerate inputs
+		ASSERT(IsNull(Ray3D::UnProject(center, Rectf(0, 0, 0, 0), projgl, viewgl)));
+		ASSERT(IsNull(Ray3D::UnProject(center, vp, MatrixGL::Zero())));
+		ASSERT(IsNull(Ray3D::UnProject(center, vp, Matrix4D::Zero())));
+	}
+
+	// Ray transformations (Matrix4D and MatrixGL)
+	{
+		Ray3D ray(Point3D(1, 0, 0), Point3D(0, 0, -1));
+
+		// Translation must shift origin without altering direction
+		Matrix4D trans = Matrix4D::Translation(10, 20, 30);
+		Ray3D tray = ray * trans;
+		ASSERT(IsEpsqual(tray.origin, Point3D(11, 20, 30)));
+		ASSERT(IsEpsqual(tray.direction, Point3D(0, 0, -1)));
+		ASSERT(IsEpsqual(Transform(ray, trans), tray));
+
+		// Rotation (90 degrees around Y)
+		Matrix4D ry4 = Matrix4D::RotationY((float)M_PI / 2.0f);
+		MatrixGL rygl = MatrixGL::RotationY((float)M_PI / 2.0f);
+		Ray3D rrot4 = ray * ry4;
+		Ray3D rrotgl = ray * rygl;
+
+		ASSERT(IsEpsqual(rrot4.origin, Point3D(0, 0, -1), 1e-5f));
+		ASSERT(IsEpsqual(rrot4.direction, Point3D(-1, 0, 0), 1e-5f));
+		ASSERT(IsEpsqual(rrot4, rrotgl, 1e-5f));
+
+		Ray3D inplace = ray;
+		inplace *= rygl;
+		ASSERT(IsEpsqual(inplace, rrotgl, 1e-5f));
+
+		// Null propagation
+		ASSERT(IsNull(ray * Matrix4D(Null)));
+		ASSERT(IsNull(Ray3D(Null) * trans));
+	}
+
+	// Hit ordering and transformations
+	{
+		Ray3D::Hit miss;
+		Ray3D::Hit nullhit = Null;
+		ASSERT(!miss && IsNull(miss) && IsNull(nullhit));
+		ASSERT(miss == nullhit);
+
+		Ray3D::Hit nearhit, farhit;
+		nearhit.hit = true;
+		nearhit.distance = 2.5f;
+		nearhit.point = Point3D(0, 0, 2.5f);
+		nearhit.normal = Point3D(0, 0, 1);
+		nearhit.triangle = 0;
+
+		farhit.hit = true;
+		farhit.distance = 6.0f;
+		farhit.point = Point3D(0, 0, -1.0f);
+		farhit.normal = Point3D(0, 0, 1);
+		farhit.triangle = 1;
+
+		ASSERT(nearhit < farhit);
+		ASSERT(farhit > nearhit);
+		ASSERT(nearhit <= nearhit && farhit >= nearhit);
+		ASSERT(nearhit < miss);
+		ASSERT(Nvl(miss, nearhit) == nearhit);
+
+		// Local-to-world Hit transformation vs direct world hit
+		MatrixGL xf = MatrixGL::Translation(3, -1, -2) * MatrixGL::RotationY((float)M_PI / 4.0f);
+		MatrixGL inv = xf.Inverse();
+
+		Ray3D worldray = Ray3D::FromPoints(Point3D(0, 0, 5), Point3D(3, -1, -2));
+		Ray3D localray = worldray * inv;
+
+		Ray3D::Hit localhit = localray.IntersectSphere(Point3D(0, 0, 0), 1.5f);
+		ASSERT(localhit);
+
+		Ray3D::Hit worldhit = localhit.Transformed(xf, worldray.origin);
+		Ray3D::Hit directhit = worldray.IntersectSphere(Point3D(3, -1, -2), 1.5f);
+		ASSERT(directhit);
+		ASSERT(IsEpsqual(worldhit.distance, directhit.distance, 1e-4f));
+		ASSERT(IsEpsqual(worldhit.point, directhit.point, 1e-4f));
+		ASSERT(IsEpsqual(worldhit.normal, directhit.normal, 1e-4f));
+
+		// Rotated triangle Hit transformation (verifies normal and point rotation)
+		Point3D tv0(-1, -1, 0), tv1(1, -1, 0), tv2(0, 1, 0);
+		Point3D wv0 = tv0 * xf, wv1 = tv1 * xf, wv2 = tv2 * xf;
+		Ray3D tray = Ray3D::FromPoints(Point3D(0, 0, 5), (wv0 + wv1 + wv2) / 3.0f);
+		Ray3D::Hit tlhit = (tray * inv).IntersectTriangle(tv0, tv1, tv2);
+		ASSERT(tlhit);
+
+		Ray3D::Hit twhit = tlhit.Transformed(xf, tray.origin);
+		Ray3D::Hit tdhit = tray.IntersectTriangle(wv0, wv1, wv2);
+		ASSERT(tdhit);
+		ASSERT(IsEpsqual(twhit.distance, tdhit.distance, 1e-4f));
+		ASSERT(IsEpsqual(twhit.point, tdhit.point, 1e-4f));
+		ASSERT(IsEpsqual(twhit.normal, tdhit.normal, 1e-4f));
+
+		// Matrix4D Hit transform and Clear
+		Matrix4D xf4 = Matrix4D::Translation(3, -1, -2);
+		Ray3D::Hit h4 = localhit * xf4;
+		ASSERT(h4 == Transform(localhit, xf4));
+		h4.Clear();
+		ASSERT(!h4 && IsNull(h4));
+	}
+
+	// Operators, hash and serialization
+	{
+		Ray3D r1(Point3D(1, 2, 3), Point3D(0, 1, 0));
+		Ray3D r2(Point3D(4, 6, 8), Point3D(0, 1, 0));
+
+		ASSERT(+r1 == r1);
+		ASSERT(-r1 == Ray3D(Point3D(1, 2, 3), Point3D(0, -1, 0)));
+		ASSERT(r1 + Point3D(3, 4, 5) == r2);
+		ASSERT(r2 - Point3D(3, 4, 5) == r1);
+		ASSERT(r1 != r2);
+
+		Ray3D r3 = r1;
+		r3 += Point3D(3, 4, 5);
+		ASSERT(r3 == r2);
+		r3 -= Point3D(3, 4, 5);
+		ASSERT(r3 == r1);
+
+		ASSERT(r1.GetHashValue() == CombineHash(r1.origin, r1.direction));
+
+		// Ray3D JSON and XML
+		String rjson = StoreAsJson(r1);
+		Ray3D rj;
+		LoadFromJson(rj, rjson);
+		ASSERT(rj == r1);
+
+		String rxml = StoreAsXML(r1);
+		Ray3D rx;
+		LoadFromXML(rx, rxml);
+		ASSERT(rx == r1);
+
+		// Ray3D::Hit JSON and XML
+		Ray3D::Hit h1 = r1.IntersectPlane(Point3D(0, 5, 0), Point3D(0, -1, 0));
+		h1.triangle = 7;
+		h1.barycentric = Point3D(0.25f, 0.5f, 0.25f);
+
+		String hjson = StoreAsJson(h1);
+		Ray3D::Hit hj;
+		LoadFromJson(hj, hjson);
+		ASSERT(hj == h1);
+
+		String hxml = StoreAsXML(h1);
+		Ray3D::Hit hx;
+		LoadFromXML(hx, hxml);
+		ASSERT(hx == h1);
+	}
+
+	LOG("Ray3D: All tests passed.");
+}
 
 CONSOLE_APP_MAIN
 {
@@ -935,4 +1313,5 @@ CONSOLE_APP_MAIN
 	TestBox3D();
 	TestMatrix4D();
 	TestQuaternion();
+	TestRay3D();
 }

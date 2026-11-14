@@ -363,7 +363,7 @@ Value[@(0.0.255) `&] [*@3 src])&]
 [s2;%% Xmlizes the box object.&]
 [s0;%% &]
 [ {{10000F(128)G(128)@1 [s0;%% [* Friend List]]}}&]
-[s4; &]
+[s3; &]
 [s5;:Upp`:`:operator`+`(const Box3`_`&`,const Box3`_`&`): Box3`_<T> 
 operator[@(0.0.255) `+]([@(0.0.255) const] Box3`_<T>[@(0.0.255) `&] 
 [*@3 a], [@(0.0.255) const] Box3`_<T>[@(0.0.255) `&] [*@3 b])&]

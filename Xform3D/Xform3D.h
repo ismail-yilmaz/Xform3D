@@ -11,6 +11,10 @@ namespace Upp {
 
 template<typename T> struct Point3_;
 template<typename T> struct Point4_;
+template<typename T> struct Box3_;
+template<typename T> struct Ray3_;
+template<typename T> struct Matrix4_;
+template<typename T> struct Matrix4GL_;
 
 template<typename T>
 struct Point3_ : Moveable<Point3_<T>> {
@@ -496,6 +500,9 @@ struct Box3_ : Moveable<Box3_<T>> {
 
     bool           Intersects(const Box3_& box) const              { return !(box.hi.x < lo.x || box.lo.x > hi.x || box.hi.y < lo.y || box.lo.y > hi.y || box.hi.z < lo.z || box.lo.z > hi.z); }
 
+    bool           Intersects(const Ray3_<T>& ray, T maxdist = std::numeric_limits<T>::max()) const         { return ray.Intersects(*this, maxdist); }
+    typename Ray3_<T>::Hit Intersect(const Ray3_<T>& ray, T maxdist = std::numeric_limits<T>::max()) const  { return ray.Intersect(*this, maxdist);  }
+    
     Box3_          Intersection(const Box3_& box) const            { return Intersects(box) ? Box3_(max(lo, box.lo), min (hi, box.hi)) : Null; }
 
     Box3_          Clamped(const Box3_& box) const                 { return { max(lo, box.lo), min(hi, box.hi) }; }
@@ -520,17 +527,17 @@ struct Box3_ : Moveable<Box3_<T>> {
     Box3_&         operator++()                                    { ++lo; ++hi; return *this; }
     Box3_&         operator--()                                    { --lo; --hi; return *this; }
 
-    friend Box3_   operator+(const Box3_& box)                       { return box; }
-    friend Box3_   operator-(const Box3_& box)                       { return Box3_(-box.lo, -box.hi); }
+    friend Box3_   operator+(const Box3_& box)                     { return box; }
+    friend Box3_   operator-(const Box3_& box)                     { return Box3_(-box.lo, -box.hi); }
 
-    friend Box3_   operator+(const Box3_& a, const Box3_& b)         { return Box3_(a.lo + b.lo, a.hi + b.hi); }
-    friend Box3_   operator+(const Box3_& a, T t)                    { return Box3_(a.lo + t, a.hi + t); }
-    friend Box3_   operator-(const Box3_& a, const Box3_& b)         { return Box3_(a.lo - b.lo, a.hi - b.hi); }
-    friend Box3_   operator-(const Box3_& a, T t)                    { return Box3_(a.lo - t, a.hi - t); }
-    friend Box3_   operator*(const Box3_& a, const Box3_& b)         { return Box3_(a.lo * b.lo, a.hi * b.hi); }
-    friend Box3_   operator*(const Box3_& a, T t)                    { return Box3_(a.lo * t, a.hi * t); }
-    friend Box3_   operator/(const Box3_& a, const Box3_& b)         { return Box3_(a.lo / b.lo, a.hi / b.hi); }
-    friend Box3_   operator/(const Box3_& a, T t)                    { return Box3_(a.lo / t, a.hi / t); }
+    friend Box3_   operator+(const Box3_& a, const Box3_& b)       { return Box3_(a.lo + b.lo, a.hi + b.hi); }
+    friend Box3_   operator+(const Box3_& a, T t)                  { return Box3_(a.lo + t, a.hi + t); }
+    friend Box3_   operator-(const Box3_& a, const Box3_& b)       { return Box3_(a.lo - b.lo, a.hi - b.hi); }
+    friend Box3_   operator-(const Box3_& a, T t)                  { return Box3_(a.lo - t, a.hi - t); }
+    friend Box3_   operator*(const Box3_& a, const Box3_& b)       { return Box3_(a.lo * b.lo, a.hi * b.hi); }
+    friend Box3_   operator*(const Box3_& a, T t)                  { return Box3_(a.lo * t, a.hi * t); }
+    friend Box3_   operator/(const Box3_& a, const Box3_& b)       { return Box3_(a.lo / b.lo, a.hi / b.hi); }
+    friend Box3_   operator/(const Box3_& a, T t)                  { return Box3_(a.lo / t, a.hi / t); }
 
     friend bool    operator==(const Box3_& a, const Box3_& b)      { return a.lo == b.lo && a.hi == b.hi; }
     friend bool    operator!=(const Box3_& a, const Box3_& b)      { return !(a == b); }
@@ -1603,6 +1610,551 @@ bool IsEpsqual(const Matrix4GL_<T>& m1, const Matrix4GL_<T>& m2, T epsilon = std
 using MatrixGL = Matrix4GL_<float>;
 
 template<typename T>
+struct Ray3_ : Moveable<Ray3_<T>> {
+    struct Hit : Moveable<Hit> {
+        bool       hit;
+        T          distance;
+        Point3_<T> point;
+        Point3_<T> normal;
+        Point3_<T> barycentric;
+        int        triangle;
+
+        Hit() : hit(false), distance(std::numeric_limits<T>::max()), triangle(-1) {}
+        Hit(const Nuller&) : hit(false), distance(std::numeric_limits<T>::max()), triangle(-1) {}
+
+        void           Clear()                                              { hit = false; distance = std::numeric_limits<T>::max(); point.Clear(); normal.Clear(); barycentric.Clear(); triangle = -1; }
+        void           SetNull()                                            { Clear(); }
+        bool           IsNullInstance() const                               { return !hit; }
+
+        operator       bool() const                                         { return hit; }
+
+        Hit            Transformed(const Matrix4_<T>& m) const;
+        Hit            Transformed(const Matrix4_<T>& m, const Point3_<T>& rayorigin) const;
+        Hit            Transformed(const Matrix4GL_<T>& m) const;
+        Hit            Transformed(const Matrix4GL_<T>& m, const Point3_<T>& rayorigin) const;
+
+        friend Hit     operator*(const Hit& h, const Matrix4_<T>& m)        { return h.Transformed(m); }
+        friend Hit&    operator*=(Hit& h, const Matrix4_<T>& m)             { return h = h.Transformed(m); }
+        friend Hit     Transform(const Hit& h, const Matrix4_<T>& m)        { return h.Transformed(m); }
+
+        friend Hit     operator*(const Hit& h, const Matrix4GL_<T>& m)      { return h.Transformed(m); }
+        friend Hit&    operator*=(Hit& h, const Matrix4GL_<T>& m)           { return h = h.Transformed(m); }
+        friend Hit     Transform(const Hit& h, const Matrix4GL_<T>& m)      { return h.Transformed(m); }
+
+        friend bool    operator==(const Hit& a, const Hit& b)               { return (!a.hit && !b.hit) || (a.hit == b.hit && a.distance == b.distance && a.point == b.point && a.normal == b.normal && a.barycentric == b.barycentric && a.triangle == b.triangle); }
+        friend bool    operator!=(const Hit& a, const Hit& b)               { return !(a == b); }
+        friend bool    operator<(const Hit& a, const Hit& b)                { return a.hit != b.hit ? a.hit : (a.hit && a.distance < b.distance); }
+        friend bool    operator>(const Hit& a, const Hit& b)                { return b < a; }
+        friend bool    operator<=(const Hit& a, const Hit& b)               { return !(b < a); }
+        friend bool    operator>=(const Hit& a, const Hit& b)               { return !(a < b); }
+
+        friend Hit     Nvl(const Hit& a, const Hit& b)                      { return IsNull(a) ? b : a; }
+
+        friend bool    IsEpsqual(const Hit& h1, const Hit& h2, T epsilon = std::numeric_limits<T>::epsilon())
+        {
+            if(h1.hit != h2.hit)
+                return false;
+            if(!h1.hit)
+                return true;
+            return abs(h1.distance - h2.distance) <= epsilon * max(T(1), max(abs(h1.distance), abs(h2.distance)))
+                && IsEpsqual(h1.point, h2.point, epsilon)
+                && IsEpsqual(h1.normal, h2.normal, epsilon)
+                && IsEpsqual(h1.barycentric, h2.barycentric, epsilon)
+                && h1.triangle == h2.triangle;
+        }
+
+        hash_t         GetHashValue() const                                 { return CombineHash(hit, distance, point, normal, barycentric, triangle); }
+        String         ToString() const                                     { return hit ? Format("[hit: true, dist: %f, point: %s, normal: %s, tri: %d]", distance, point, normal, triangle) : String("[hit: false]"); }
+
+        operator       Value() const                                        { return FitsSvoValue<Hit>() ? SvoToValue(*this) : RichToValue(*this); }
+        Hit(const Value& src)                                               { *this = src.Get<Hit>(); }
+
+        operator       Ref()                                                { return AsRef(*this); }
+
+        void           Serialize(Stream& s)                                 { s % hit % distance % point % normal % barycentric % triangle; }
+        void           Jsonize(JsonIO& jio)                                 { jio("hit", hit)("distance", distance)("point", point)("normal", normal)("barycentric", barycentric)("triangle", triangle); }
+        void           Xmlize(XmlIO& xio)                                   { xio.Attr("hit", hit).Attr("distance", distance).Attr("triangle", triangle)("point", point)("normal", normal)("barycentric", barycentric); }
+
+        int            Compare(const Hit&) const                            { NEVER(); return 0; }
+        int            PolyCompare(const Value&) const                      { NEVER(); return 0; }
+    };
+
+    Point3_<T> origin;
+    Point3_<T> direction;
+
+    static_assert(std::is_floating_point<T>::value, "Upp::Ray3_<T>: T must be a floating point type");
+
+    Ray3_()                                                                             {}
+    Ray3_(const Point3_<T>& origin, const Point3_<T>& direction) : origin(origin), direction(direction) {}
+    Ray3_(T ox, T oy, T oz, T dx, T dy, T dz) : origin(ox, oy, oz), direction(dx, dy, dz) {}
+    Ray3_(const Nuller&)                                                                { SetNull(); }
+
+    static Ray3_   FromPoints(const Point3_<T>& from, const Point3_<T>& to)             { return Ray3_(from, (to - from).Normalized()); }
+
+    static Ray3_<T> UnProject(const Point_<T>& p, const Rect_<T>& viewport, const Matrix4_<T>& mvp);
+    static Ray3_<T> UnProject(const Point_<T>& p, const Rect_<T>& viewport, const Matrix4GL_<T>& mvp);
+    static Ray3_<T> UnProject(const Point_<T>& p, const Rect_<T>& viewport, const Matrix4_<T>& projection, const Matrix4_<T>& modelview);
+    static Ray3_<T> UnProject(const Point_<T>& p, const Rect_<T>& viewport, const Matrix4GL_<T>& projection, const Matrix4GL_<T>& modelview);
+
+    void           Clear()                                                              { origin.Clear(); direction.Clear(); }
+    bool           IsZero() const                                                       { return origin.IsZero() && direction.IsZero(); }
+
+    void           SetNull()                                                            { origin.SetNull(); direction.SetNull(); }
+    bool           IsNullInstance() const                                               { return origin.IsNullInstance() || direction.IsNullInstance(); }
+
+    Point3_<T>     At(T t) const                                                        { return origin + direction * t; }
+    Point3_<T>     operator()(T t) const                                                { return At(t); }
+
+    bool           IsUnit() const                                                       { return direction.IsUnit(); }
+    Ray3_&         Normalize()                                                          { direction.Normalize(); return *this; }
+    Ray3_          Normalized() const                                                   { return Ray3_(origin, direction.Normalized()); }
+
+    void           Offset(T dx, T dy, T dz)                                             { origin.Offset(dx, dy, dz); }
+    void           Offset(const Point3_<T>& p)                                          { origin += p; }
+    Ray3_          Offseted(T dx, T dy, T dz) const                                     { return Ray3_(origin.Offseted(dx, dy, dz), direction); }
+    Ray3_          Offseted(const Point3_<T>& p) const                                  { return Ray3_(origin + p, direction); }
+
+    Point3_<T>     ClosestPointTo(const Point3_<T>& p) const;
+    T              DistanceTo(const Point3_<T>& p) const                                { return ClosestPointTo(p).Distance(p); }
+
+    Hit            IntersectPlane(const Point3_<T>& p, const Point3_<T>& normal, bool backface = false) const;
+    Hit            IntersectSphere(const Point3_<T>& center, T radius) const;
+    bool           IntersectsSphere(const Point3_<T>& center, T radius, T maxdist = std::numeric_limits<T>::max()) const;
+    bool           Intersects(const Box3_<T>& box, T& tmin, T& tmax) const;
+    bool           Intersects(const Box3_<T>& box, T maxdist = std::numeric_limits<T>::max()) const;
+    Hit            Intersect(const Box3_<T>& box, T maxdist = std::numeric_limits<T>::max()) const;
+    Hit            IntersectTriangle(const Point3_<T>& v0, const Point3_<T>& v1, const Point3_<T>& v2, bool backface = false, T maxdist = std::numeric_limits<T>::max()) const;
+    bool           IntersectsTriangle(const Point3_<T>& v0, const Point3_<T>& v1, const Point3_<T>& v2, bool backface = false, T maxdist = std::numeric_limits<T>::max()) const;
+
+    Ray3_&         operator+=(const Point3_<T>& p)                                      { origin += p; return *this; }
+    Ray3_&         operator-=(const Point3_<T>& p)                                      { origin -= p; return *this; }
+
+    friend Ray3_   operator+(const Ray3_& r)                                            { return r; }
+    friend Ray3_   operator-(const Ray3_& r)                                            { return Ray3_(r.origin, -r.direction); }
+    friend Ray3_   operator+(const Ray3_& r, const Point3_<T>& p)                       { return Ray3_(r.origin + p, r.direction); }
+    friend Ray3_   operator-(const Ray3_& r, const Point3_<T>& p)                       { return Ray3_(r.origin - p, r.direction); }
+
+    friend bool    operator==(const Ray3_& a, const Ray3_& b)                           { return a.origin == b.origin && a.direction == b.direction; }
+    friend bool    operator!=(const Ray3_& a, const Ray3_& b)                           { return !(a == b); }
+
+    friend Ray3_   Nvl(const Ray3_& a, const Ray3_& b)                                  { return IsNull(a) ? b : a; }
+
+    hash_t         GetHashValue() const                                                 { return CombineHash(origin, direction); }
+    String         ToString() const                                                     { return Format("[origin: %s, direction: %s]", origin, direction); }
+
+    operator       Value() const                                                        { return FitsSvoValue<Ray3_>() ? SvoToValue(*this) : RichToValue(*this); }
+    Ray3_(const Value& src)                                                             { *this = src.Get<Ray3_>(); }
+
+    operator       Ref()                                                                { return AsRef(*this); }
+
+    void           Serialize(Stream& s)                                                 { s % origin % direction; }
+    void           Jsonize(JsonIO& jio)                                                 { jio("origin", origin)("direction", direction); }
+    void           Xmlize(XmlIO& xio)                                                   { xio("origin", origin)("direction", direction); }
+
+    int            Compare(const Ray3_&) const                                          { NEVER(); return 0; }
+    int            PolyCompare(const Value&) const                                      { NEVER(); return 0; }
+};
+
+template<typename T>
+typename Ray3_<T>::Hit Ray3_<T>::Hit::Transformed(const Matrix4_<T>& m) const
+{
+    if(!hit || IsNull(m))
+        return Null;
+
+    Matrix4_<T> inv = m.Inverse();
+    if(IsNull(inv))
+        return Null;
+
+    Hit res = *this;
+    res.point = point * m;
+    res.distance = distance * (Point4_<T>(normal, 0) * m).ToPoint3D().Length();
+
+    Point3_<T> n(
+        normal ^ inv.x.ToPoint3D(),
+        normal ^ inv.y.ToPoint3D(),
+        normal ^ inv.z.ToPoint3D()
+    );
+    if(n.Squared() > std::numeric_limits<T>::epsilon())
+        res.normal = n.Normalized();
+
+    return res;
+}
+
+template<typename T>
+typename Ray3_<T>::Hit Ray3_<T>::Hit::Transformed(const Matrix4_<T>& m, const Point3_<T>& rayorigin) const
+{
+    Hit res = Transformed(m);
+    if(res)
+        res.distance = res.point.Distance(rayorigin);
+    return res;
+}
+
+template<typename T>
+typename Ray3_<T>::Hit Ray3_<T>::Hit::Transformed(const Matrix4GL_<T>& m) const
+{
+    if(!hit || IsNull(m))
+        return Null;
+
+    Matrix4GL_<T> inv = m.Inverse();
+    if(IsNull(inv))
+        return Null;
+
+    Hit res = *this;
+    res.point = point * m;
+    res.distance = distance * (Point4_<T>(normal, 0) * m).ToPoint3D().Length();
+
+    Point3_<T> n(
+        normal ^ inv.x.ToPoint3D(),
+        normal ^ inv.y.ToPoint3D(),
+        normal ^ inv.z.ToPoint3D()
+    );
+    if(n.Squared() > std::numeric_limits<T>::epsilon())
+        res.normal = n.Normalized();
+
+    return res;
+}
+
+template<typename T>
+typename Ray3_<T>::Hit Ray3_<T>::Hit::Transformed(const Matrix4GL_<T>& m, const Point3_<T>& rayorigin) const
+{
+    Hit res = Transformed(m);
+    if(res)
+        res.distance = res.point.Distance(rayorigin);
+    return res;
+}
+
+template <typename T, typename M>
+Ray3_<T> UnProject3_(const Point_<T>& p, const Rect_<T>& viewport, const M& mvp)
+{
+    if(IsNull(p) || IsNull(viewport) || viewport.IsEmpty() || IsNull(mvp))
+        return Null;
+
+    M inv = mvp.Inverse();
+    if(IsNull(inv))
+        return Null;
+
+    T nx = (T(2) * (p.x - viewport.left) / viewport.GetWidth()) - T(1);
+    T ny = T(1) - (T(2) * (p.y - viewport.top) / viewport.GetHeight());
+
+    Point4_<T> p0 = Point4_<T>(nx, ny, T(-1), T(1)) * inv;
+    Point4_<T> p1 = Point4_<T>(nx, ny, T(1), T(1)) * inv;
+
+    constexpr T eps = std::numeric_limits<T>::epsilon();
+    if(abs(p0.w) <= eps || abs(p1.w) <= eps)
+        return Null;
+
+    return Ray3_<T>::FromPoints(
+        Point3_<T>(p0.x / p0.w, p0.y / p0.w, p0.z / p0.w),
+        Point3_<T>(p1.x / p1.w, p1.y / p1.w, p1.z / p1.w)
+    );
+}
+
+template <typename T>
+Ray3_<T> Ray3_<T>::UnProject(const Point_<T>& p, const Rect_<T>& viewport, const Matrix4_<T>& mvp)
+{
+    return UnProject3_(p, viewport, mvp);
+}
+
+template <typename T>
+Ray3_<T> Ray3_<T>::UnProject(const Point_<T>& p, const Rect_<T>& viewport, const Matrix4GL_<T>& mvp)
+{
+    return UnProject3_(p, viewport, mvp);
+}
+
+template <typename T>
+Ray3_<T> Ray3_<T>::UnProject(const Point_<T>& p, const Rect_<T>& viewport, const Matrix4_<T>& projection, const Matrix4_<T>& modelview)
+{
+    return UnProject(p, viewport, modelview * projection);
+}
+
+template <typename T>
+Ray3_<T> Ray3_<T>::UnProject(const Point_<T>& p, const Rect_<T>& viewport, const Matrix4GL_<T>& projection, const Matrix4GL_<T>& modelview)
+{
+    return UnProject(p, viewport, projection * modelview);
+}
+
+template<typename T>
+Point3_<T> Ray3_<T>::ClosestPointTo(const Point3_<T>& p) const
+{
+    Point3_<T> dir = direction.IsUnit() ? direction : direction.Normalized();
+    if(dir.IsNullInstance())
+        return origin;
+    T t = max(T(0), (p - origin) ^ dir);
+    return origin + dir * t;
+}
+
+template<typename T>
+typename Ray3_<T>::Hit Ray3_<T>::IntersectPlane(const Point3_<T>& p, const Point3_<T>& normal, bool backface) const
+{
+    if(IsNullInstance() || normal.IsNullInstance())
+        return Null;
+
+    Point3_<T> n = normal.IsUnit() ? normal : normal.Normalized();
+    if(n.IsNullInstance())
+        return Null;
+
+    T denom = direction ^ n;
+    T eps = std::numeric_limits<T>::epsilon();
+    if(backface ? abs(denom) <= eps : denom >= -eps)
+        return Null;
+
+    T t = ((p - origin) ^ n) / denom;
+    if(t < T(0))
+        return Null;
+
+    Hit res;
+    res.hit = true;
+    res.distance = t;
+    res.point = At(t);
+    res.normal = denom < T(0) ? n : -n;
+    return res;
+}
+
+template<typename T>
+typename Ray3_<T>::Hit Ray3_<T>::IntersectSphere(const Point3_<T>& center, T radius) const
+{
+    if(IsNullInstance() || radius <= T(0))
+        return Null;
+
+    Point3_<T> dir = direction.IsUnit() ? direction : direction.Normalized();
+    if(dir.IsNullInstance())
+        return Null;
+
+    Point3_<T> oc = origin - center;
+    T b = oc ^ dir;
+    T c = oc.Squared() - radius * radius;
+    T disc = b * b - c;
+    if(disc < T(0))
+        return Null;
+
+    T sq = sqrt(disc);
+    T t = -b - sq;
+    if(t < T(0))
+        t = -b + sq;
+    if(t < T(0))
+        return Null;
+
+    Hit res;
+    res.hit = true;
+    res.distance = t;
+    res.point = origin + dir * t;
+    res.normal = (res.point - center).Normalized();
+    return res;
+}
+
+template<typename T>
+bool Ray3_<T>::IntersectsSphere(const Point3_<T>& center, T radius, T maxdist) const
+{
+    Hit h = IntersectSphere(center, radius);
+    return h && h.distance <= maxdist;
+}
+
+template<typename T>
+bool Ray3_<T>::Intersects(const Box3_<T>& box, T& tmin, T& tmax) const
+{
+    if(IsNull(box) || IsNullInstance())
+        return false;
+
+    T lo = T(0);
+    T hi = std::numeric_limits<T>::max();
+    T eps = std::numeric_limits<T>::epsilon();
+
+    auto slab = [&](T o, T d, T blo, T bhi) -> bool {
+        if(abs(d) <= eps)
+            return o >= blo && o <= bhi;
+        T inv = T(1) / d;
+        T t1 = (blo - o) * inv;
+        T t2 = (bhi - o) * inv;
+        if(t1 > t2)
+            Swap(t1, t2);
+        lo = max(lo, t1);
+        hi = min(hi, t2);
+        return lo <= hi;
+    };
+
+    if(!slab(origin.x, direction.x, box.lo.x, box.hi.x)
+    || !slab(origin.y, direction.y, box.lo.y, box.hi.y)
+    || !slab(origin.z, direction.z, box.lo.z, box.hi.z))
+        return false;
+
+    tmin = lo;
+    tmax = hi;
+    return true;
+}
+
+template<typename T>
+bool Ray3_<T>::Intersects(const Box3_<T>& box, T maxdist) const
+{
+    T tmin, tmax;
+    return Intersects(box, tmin, tmax) && tmin <= maxdist;
+}
+
+template <typename T>
+typename Ray3_<T>::Hit Ray3_<T>::Intersect(const Box3_<T>& box, T maxdist) const
+{
+    if(IsNullInstance() || IsNull(box) || maxdist < T(0))
+        return Null;
+
+    constexpr T eps = std::numeric_limits<T>::epsilon();
+    T tmin = std::numeric_limits<T>::lowest();
+    T tmax = std::numeric_limits<T>::max();
+    Point3_<T> nmin(0, 0, 0);
+    Point3_<T> nmax(0, 0, 0);
+
+    auto slab = [&](T o, T d, T lo, T hi, const Point3_<T>& axis) -> bool {
+        if(abs(d) <= eps)
+            return o >= lo && o <= hi;
+
+        T invd = T(1) / d;
+        T t1 = (lo - o) * invd;
+        T t2 = (hi - o) * invd;
+        Point3_<T> n1 = -axis;
+        Point3_<T> n2 = axis;
+
+        if(t1 > t2) {
+            Swap(t1, t2);
+            Swap(n1, n2);
+        }
+        if(t1 > tmin) {
+            tmin = t1;
+            nmin = n1;
+        }
+        if(t2 < tmax) {
+            tmax = t2;
+            nmax = n2;
+        }
+        return tmin <= tmax;
+    };
+
+    if(!slab(origin.x, direction.x, box.lo.x, box.hi.x, Point3_<T>(1, 0, 0))
+    || !slab(origin.y, direction.y, box.lo.y, box.hi.y, Point3_<T>(0, 1, 0))
+    || !slab(origin.z, direction.z, box.lo.z, box.hi.z, Point3_<T>(0, 0, 1)))
+        return Null;
+
+    if(tmax < T(0))
+        return Null;
+
+    T t = tmin >= T(0) ? tmin : tmax;
+    if(t > maxdist)
+        return Null;
+
+    Hit h;
+    h.hit = true;
+    h.distance = t;
+    h.point = At(t);
+    h.normal = tmin >= T(0) ? nmin : nmax;
+    return h;
+}
+
+template<typename T>
+typename Ray3_<T>::Hit Ray3_<T>::IntersectTriangle(const Point3_<T>& v0, const Point3_<T>& v1, const Point3_<T>& v2, bool backface, T maxdist) const
+{
+    Point3_<T> e1 = v1 - v0;
+    Point3_<T> e2 = v2 - v0;
+    Point3_<T> pv = direction % e2;
+    T det = e1 ^ pv;
+    T eps = std::numeric_limits<T>::epsilon();
+
+    if(backface) {
+        if(abs(det) <= eps)
+            return Null;
+    }
+    else {
+        if(det <= eps)
+            return Null;
+    }
+
+    T inv = T(1) / det;
+    Point3_<T> tv = origin - v0;
+    T u = (tv ^ pv) * inv;
+    if(u < T(0) || u > T(1))
+        return Null;
+
+    Point3_<T> qv = tv % e1;
+    T v = (direction ^ qv) * inv;
+    if(v < T(0) || u + v > T(1))
+        return Null;
+
+    T dist = (e2 ^ qv) * inv;
+    if(dist <= eps || dist >= maxdist)
+        return Null;
+
+    Hit res;
+    res.hit = true;
+    res.distance = dist;
+    res.point = At(dist);
+    res.barycentric = Point3_<T>(T(1) - u - v, u, v);
+    res.normal = det > T(0) ? Normal(v0, v1, v2) : Normal(v0, v2, v1);
+    return res;
+}
+
+template<typename T>
+bool Ray3_<T>::IntersectsTriangle(const Point3_<T>& v0, const Point3_<T>& v1, const Point3_<T>& v2, bool backface, T maxdist) const
+{
+    return IntersectTriangle(v0, v1, v2, backface, maxdist).hit;
+}
+
+template<typename T>
+Ray3_<T> operator*(const Ray3_<T>& ray, const Matrix4_<T>& m)
+{
+    if(IsNull(ray) || IsNull(m))
+        return Null;
+    Point3_<T> orig = ray.origin * m;
+    Point3_<T> dir = m.IsAffine()
+        ? (Point4_<T>(ray.direction, 0) * m).ToPoint3D()
+        : ((ray.origin + ray.direction) * m - orig);
+    if(IsNull(orig) || IsNull(dir) || dir.Squared() <= std::numeric_limits<T>::epsilon())
+        return Null;
+    return Ray3_<T>(orig, dir.Normalized());
+}
+
+template<typename T>
+Ray3_<T>& operator*=(Ray3_<T>& ray, const Matrix4_<T>& m)
+{
+    return ray = ray * m;
+}
+
+template<typename T>
+Ray3_<T> Transform(const Ray3_<T>& ray, const Matrix4_<T>& m)
+{
+    return ray * m;
+}
+
+template<typename T>
+Ray3_<T> operator*(const Ray3_<T>& ray, const Matrix4GL_<T>& m)
+{
+    if(IsNull(ray) || IsNull(m))
+        return Null;
+    Point3_<T> orig = ray.origin * m;
+    Point3_<T> dir = m.IsAffine()
+        ? (Point4_<T>(ray.direction, 0) * m).ToPoint3D()
+        : ((ray.origin + ray.direction) * m - orig);
+    if(IsNull(orig) || IsNull(dir) || dir.Squared() <= std::numeric_limits<T>::epsilon())
+        return Null;
+    return Ray3_<T>(orig, dir.Normalized());
+}
+
+template<typename T>
+Ray3_<T>& operator*=(Ray3_<T>& ray, const Matrix4GL_<T>& m)
+{
+    return ray = ray * m;
+}
+
+template<typename T>
+Ray3_<T> Transform(const Ray3_<T>& ray, const Matrix4GL_<T>& m)
+{
+    return ray * m;
+}
+
+template<typename T>
+bool IsEpsqual(const Ray3_<T>& r1, const Ray3_<T>& r2, T epsilon = std::numeric_limits<T>::epsilon())
+{
+    return IsEpsqual(r1.origin, r2.origin, epsilon) && IsEpsqual(r1.direction, r2.direction, epsilon);
+}
+
+using Ray3D = Ray3_<float>;
+
+template<typename T>
 struct Quaternion_ : Moveable<Quaternion_<T>> {
     T x, y, z, w;
 
@@ -1624,6 +2176,7 @@ struct Quaternion_ : Moveable<Quaternion_<T>> {
     Quaternion_<T>     Conjugate() const                                       { return Quaternion_<T>(-x, -y, -z, w); }
     Quaternion_<T>     operator*(const Quaternion_<T>& q) const;
     Point3_<T>         Rotate(const Point3_<T>& p) const;
+    Ray3_<T>           Rotate(const Ray3_<T>& r) const                         { return IsNull(r) ? Ray3_<T>(Null) : Ray3_<T>(Rotate(r.origin), Rotate(r.direction)); }
 
     Matrix4_<T>        GetMatrix() const;
     Matrix4GL_<T>      GetMatrixGL() const;
